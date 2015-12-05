@@ -130,11 +130,11 @@ static void check_sorted(const char *caller, cmp_fun_t cmp, const char *key, con
   size_t i;
 
   if(key) {
-    int order = -1;
+    int order = 1;
     for(i = 0; i < n; ++i) {
       const void *elt = (const char *)data + i * sz;
       int new_order = cmp(key, elt);
-      if(new_order < order) {
+      if(new_order > order) {
         report_error(caller, "processed array is not sorted");
 	return;
       }
@@ -145,7 +145,7 @@ static void check_sorted(const char *caller, cmp_fun_t cmp, const char *key, con
   for(i = 1; i < n; ++i) {
     const void *elt = (const char *)data + i * sz;
     const void *prev = (const char *)elt - sz;
-    if(cmp(prev, elt) < 0) {
+    if(cmp(prev, elt) > 0) {
       report_error(caller, "processed array is not sorted");
       return;
     }
