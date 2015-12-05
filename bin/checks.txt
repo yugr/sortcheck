@@ -1,1 +1,0 @@
-comparison function returns unstable results
