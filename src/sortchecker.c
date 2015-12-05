@@ -11,15 +11,12 @@
 
 #define EXPORT __attribute__((visibility("default")))
 
-int debug = 0;
-int max_errors = 10;
-int print_to_syslog = 0;
+static int debug = 0;
+static int max_errors = 10;
+static int print_to_syslog = 0;
 
+static int init_done = 0;
 static void __attribute__((constructor)) init() {
-  static int init_done = 0;
-  if(init_done)
-    return;
-
   const char *opts;
   if(!(opts = getenv("SORTCHECK_OPTIONS")))
     return;
@@ -60,7 +57,7 @@ static void __attribute__((constructor)) init() {
   init_done = 1;
 }
 
-int num_errors = 0;
+static int num_errors = 0;
 
 typedef int (*cmp_fun_t)(const void *, const void *);
 
