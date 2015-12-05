@@ -5,7 +5,7 @@ of order axioms in comparison functions passed to qsort
 or bsearch routines. Such violations have undefined behavior
 and may in practice cause all sorts of runtime errors.
 
-The tool works by intercepting qsort and friends through LD_PRELOAD
+The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
 
 The tool is a proof-of-concept so it's hacky and slow.
@@ -17,7 +17,15 @@ tbd + compiler instrumentation in C++ world
 # Usage
 
 Run your app with preloaded libsortcheck.so:
- $ LD_PRELOAD=libsortcheck.so myapp ...
+ $ LD\_PRELOAD=libsortcheck.so myapp ...
+
+You can customize behavior through SORTCHECK\_OPTIONS environment
+variable - a comma-separated list of option assignments e.g.
+ $ export SORTCHECK\_OPTIONS=debug=1:max\_errors=10
+Supported options are
+* max\_errors - maximum number of errors to report
+* debug - print debug info
+* print\_to\_syslog - print warnings to syslog (instead of stderr)
 
 # Build
 
@@ -31,10 +39,8 @@ To test the tool, run test/test.sh from project top directory.
 
 Various TODOs are scattered all over the codebase.
 High-level stuff:
-* write comments
-* print buggy elements
-* print diagnostics to syslog
 * apply to real distribution (e.g. boot)
-* configure params from env. var
+* print array elements which triggered errors
+* write comments
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
 
