@@ -39,6 +39,7 @@ To test the tool, run test/test.sh from project top directory.
 
 Various TODOs are scattered all over the codebase.
 High-level stuff:
+* print more context: program name (and args?), pid, return address (perhaps full backtrace?)
 * apply to real distribution (e.g. boot)
 * print array elements which triggered errors
 * write comments
