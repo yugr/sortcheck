@@ -7,12 +7,58 @@
 #include <string.h>
 
 #include <dlfcn.h>
+#include <syslog.h>
 
 #define EXPORT __attribute__((visibility("default")))
 
-// TODO: read these from env var
 int debug = 0;
 int max_errors = 10;
+int print_to_syslog = 0;
+
+static void __attribute__((constructor)) init() {
+  static int init_done = 0;
+  if(init_done)
+    return;
+
+  const char *opts;
+  if(!(opts = getenv("SORTCHECK_OPTIONS")))
+    return;
+
+  char *opts_ = strdup(opts);
+
+  char *cur;
+  for(cur = opts_; *cur; ) {
+    // SORTCHECK_OPTIONS is a colon-separated list of assignments
+
+    const char *name = cur;
+
+    char *assign = strchr(cur, '=');
+    if(!assign)
+      break;
+    *assign = 0;
+
+    char *value = assign + 1;
+
+    char *end = strchr(value, ':');
+    if(end)
+      *end = 0;
+    cur = end ? end + 1 : value + strlen(value);
+
+    if(0 == strcmp(name, "debug")) {
+      debug = atoi(value);
+    } else if(0 == strcmp(name, "print_to_syslog")) {
+      print_to_syslog = atoi(value);;
+    } else if(0 == strcmp(name, "max_errors")) {
+      max_errors = atoi(value);
+    } else {
+      fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
+      exit(1);
+    }
+  }
+  free(opts_);
+
+  init_done = 1;
+}
 
 int num_errors = 0;
 
@@ -31,11 +77,14 @@ static unsigned checksum(const void *data, size_t sz) {
 
 // TODO: print program name
 
-#define report_error(where, fmt, ...) do { \
-  if(num_errors < max_errors) { \
-    fprintf(stderr, "sortchecker: error in %s: " fmt "\n", where, ##__VA_ARGS__); \
-    ++num_errors; \
-  } \
+#define report_error(where, fmt, ...) do {                                              \
+  if(num_errors < max_errors) {                                                         \
+    if(print_to_syslog)                                                                 \
+      syslog(LOG_WARNING, "error in %s: " fmt "\n", where, ##__VA_ARGS__);              \
+    else                                                                                \
+      fprintf(stderr, "sortchecker: error in %s: " fmt "\n", where, ##__VA_ARGS__);     \
+    ++num_errors;                                                                       \
+  }                                                                                     \
 } while(0)
 
 // Check that comparator is stable and does not modify arguments
