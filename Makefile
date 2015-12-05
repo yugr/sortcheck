@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
+CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror -D_GNU_SOURCE
 ifeq (,$(DEBUG))
   CFLAGS += -O2
 else
