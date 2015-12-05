@@ -55,4 +55,6 @@ for t in test/*.c; do
     fi
   fi
 done
+
+echo "Total: $num_errors errors"
  
