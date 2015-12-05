@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+gdb -ex 'set environment LD_PRELOAD bin/libsortcheck.so' -ex 'set pagination off' --args "$@"
+

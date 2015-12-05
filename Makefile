@@ -1,14 +1,20 @@
-CC = gcc
-CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror -D_GNU_SOURCE
+CC = gcc-4.9
+CPPFLAGS = -D_GNU_SOURCE -Iinclude
+CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
+LDFLAGS = -fPIC -shared -Wl,--no-allow-shlib-undefined
 ifeq (,$(DEBUG))
   CFLAGS += -O2
+  LDFLAGS += -Wl,-O2
 else
   CFLAGS += -O0
 endif
-LDFLAGS = -fPIC -shared
+ifneq (,$(SANITIZE))
+  CFLAGS += -fsanitize=address
+  LDFLAGS += -Wl,--allow-shlib-undefined -fsanitize=address
+endif
 LIBS = -ldl
 
-OBJS = bin/sortchecker.o
+OBJS = bin/sortchecker.o bin/proc_maps.o bin/checksum.o
 
 $(shell mkdir -p bin)
 
@@ -18,7 +24,7 @@ bin/libsortcheck.so: $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
 
 bin/%.o: src/%.c Makefile
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f bin/*

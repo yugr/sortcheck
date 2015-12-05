@@ -3,85 +3,128 @@
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <dlfcn.h>
 #include <syslog.h>
 
+#include <checksum.h>
+#include <proc_maps.h>
+
 #define EXPORT __attribute__((visibility("default")))
 
+// Runtime options
 static int debug = 0;
 static int max_errors = 10;
 static int print_to_syslog = 0;
 
+// Other pieces of state
 static int init_done = 0;
+static ProcMap *maps;
+static size_t nmaps;
+static int num_errors = 0;
+
+static void fini() {
+  if(maps)
+    free(maps);
+}
+
 static void init() {
   const char *opts;
-  if(!(opts = getenv("SORTCHECK_OPTIONS")))
-    return;
+  if((opts = getenv("SORTCHECK_OPTIONS"))) {
+    char *opts_ = strdup(opts);
 
-  char *opts_ = strdup(opts);
+    char *cur;
+    for(cur = opts_; *cur; ) {
+      // SORTCHECK_OPTIONS is a colon-separated list of assignments
 
-  char *cur;
-  for(cur = opts_; *cur; ) {
-    // SORTCHECK_OPTIONS is a colon-separated list of assignments
+      const char *name = cur;
 
-    const char *name = cur;
+      char *assign = strchr(cur, '=');
+      if(!assign)
+        break;
+      *assign = 0;
 
-    char *assign = strchr(cur, '=');
-    if(!assign)
-      break;
-    *assign = 0;
+      char *value = assign + 1;
 
-    char *value = assign + 1;
+      char *end = strchr(value, ':');
+      if(end)
+        *end = 0;
+      cur = end ? end + 1 : value + strlen(value);
 
-    char *end = strchr(value, ':');
-    if(end)
-      *end = 0;
-    cur = end ? end + 1 : value + strlen(value);
-
-    if(0 == strcmp(name, "debug")) {
-      debug = atoi(value);
-    } else if(0 == strcmp(name, "print_to_syslog")) {
-      print_to_syslog = atoi(value);;
-    } else if(0 == strcmp(name, "max_errors")) {
-      max_errors = atoi(value);
-    } else {
-      fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
-      exit(1);
+      if(0 == strcmp(name, "debug")) {
+        debug = atoi(value);
+      } else if(0 == strcmp(name, "print_to_syslog")) {
+        print_to_syslog = atoi(value);;
+      } else if(0 == strcmp(name, "max_errors")) {
+        max_errors = atoi(value);
+      } else {
+        fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
+        exit(1);
+      }
     }
+    free(opts_);
   }
-  free(opts_);
+
+  // Get mappings
+  maps = get_proc_maps(&nmaps);
+  if(debug) {
+    fputs("Process map:\n", stderr);
+    size_t i;
+    for(i = 0; i < nmaps; ++i)
+      fprintf(stderr, "  %50s: %p-%p\n", &maps[i].name[0], maps[i].begin_addr, maps[i].end_addr);
+  }
+
+  atexit(fini);
+  void *tmp = fini; tmp = tmp;
 
   init_done = 1;
 }
 
-static int num_errors = 0;
+typedef struct {
+  const char *func;
+  const void *ret_addr;
+  const char *caller_module;
+  size_t caller_offset;
+} ErrorContext;
+
+static void report_error(ErrorContext *ctx, const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+
+  if(num_errors >= max_errors)
+    return;
+  ++num_errors;
+
+  if(!ctx->caller_module) {
+    // Lazily compute caller's module (no race!)
+    size_t i;
+    for(i = 0; i < nmaps; ++i) {
+      if(maps[i].begin_addr <= ctx->ret_addr && ctx->ret_addr < maps[i].end_addr) {
+	ctx->caller_module = &maps[i].name[0];
+	ctx->caller_offset = (const char *)ctx->ret_addr - (const char *)maps[i].begin_addr;
+	break;
+      }
+    }
+    if(i == nmaps) {
+      ctx->caller_module = "<unknown>";
+      ctx->caller_offset = 0;
+    }
+  }
+
+  char newfmt[256];
+  snprintf(newfmt, sizeof(newfmt), "%s (called from %s+%zx): %s\n", ctx->func, ctx->caller_module, ctx->caller_offset, fmt);
+
+  if(print_to_syslog)
+    vsyslog(LOG_WARNING, newfmt, ap);
+  else
+    vfprintf(stderr, newfmt, ap);
+}
 
 typedef int (*cmp_fun_t)(const void *, const void *);
 
-static unsigned checksum(const void *data, size_t sz) {
-  // Fletcher's checksum
-  uint16_t s1 = 0, s2 = 0;
-  size_t i;
-  for(i = 0; i < sz; ++i) {
-    s1 = (s1 + ((const uint8_t *)data)[i]) % UINT8_MAX;
-    s2 = (s2 + s1) % UINT8_MAX;
-  }
-  return s1 | (s2 << 8);
-}
-
-#define report_error(where, fmt, ...) do {                        \
-  if(num_errors < max_errors) {                                   \
-    if(print_to_syslog)                                           \
-      syslog(LOG_WARNING, "%s: " fmt "\n", where, ##__VA_ARGS__); \
-    else                                                          \
-      fprintf(stderr, "%s: " fmt "\n", where, ##__VA_ARGS__);     \
-    ++num_errors;                                                 \
-  }                                                               \
-} while(0)
-
 // Check that comparator is stable and does not modify arguments
-static void check_basic(const char *caller, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
   const char *some = key ? key : data;
   size_t i;
 
@@ -91,12 +134,12 @@ static void check_basic(const char *caller, cmp_fun_t cmp, const char *key, cons
     unsigned cs = checksum(elt, sz);
     cmp(some, elt);
     if(cs != checksum(elt, sz)) {
-      report_error(caller, "comparison function modifies data");
+      report_error(ctx, "comparison function modifies data");
       break;
     }
     cmp(elt, elt);
     if(cs != checksum(elt, sz)) {
-      report_error(caller, "comparison function modifies data");
+      report_error(ctx, "comparison function modifies data");
       break;
     }
   }
@@ -105,7 +148,7 @@ static void check_basic(const char *caller, cmp_fun_t cmp, const char *key, cons
   for(i = 0; i < n; ++i) {
     const void *elt = (const char *)data + i * sz;
     if(cmp(some, elt) != cmp(some, elt)) {
-      report_error(caller, "comparison function returns unstable results");
+      report_error(ctx, "comparison function returns unstable results");
       break;
     }
   }
@@ -115,14 +158,14 @@ static void check_basic(const char *caller, cmp_fun_t cmp, const char *key, cons
     const void *elt = (const char *)data + i * sz;
     // TODO: it may make sense to compare different but equal elements?
     if(0 != cmp(elt, elt)) {
-      report_error(caller, "comparison function returns non-zero for equal elements");
+      report_error(ctx, "comparison function returns non-zero for equal elements");
       break;
     }
   }
 }
 
 // Check that array is sorted
-static void check_sorted(const char *caller, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
   size_t i;
 
   if(key) {
@@ -131,7 +174,7 @@ static void check_sorted(const char *caller, cmp_fun_t cmp, const char *key, con
       const void *elt = (const char *)data + i * sz;
       int new_order = cmp(key, elt);
       if(new_order > order) {
-        report_error(caller, "processed array is not sorted");
+        report_error(ctx, "processed array is not sorted");
 	return;  // Return to stop further error reporting
       }
       order = new_order;
@@ -142,14 +185,14 @@ static void check_sorted(const char *caller, cmp_fun_t cmp, const char *key, con
     const void *elt = (const char *)data + i * sz;
     const void *prev = (const char *)elt - sz;
     if(cmp(prev, elt) > 0) {
-      report_error(caller, "processed array is not sorted");
+      report_error(ctx, "processed array is not sorted");
       break;
     }
   }
 }
 
 // Check that ordering is total
-static void check_total(const char *caller, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
   key = key;  // TODO: check key as well
 
   int8_t cmp_[32][32];
@@ -172,7 +215,7 @@ static void check_total(const char *caller, cmp_fun_t cmp, const char *key, cons
   for(i = 0; i < n; ++i)
   for(j = 0; j < n; ++j) {
     if(cmp_[i][j] != -cmp_[j][i]) {
-      report_error(caller, "comparison function is not symmetric");
+      report_error(ctx, "comparison function is not symmetric");
       goto sym_check_done;
     }
   }
@@ -184,7 +227,7 @@ sym_check_done:
   for(j = 0; j < n; ++j)
   for(k = 0; k < n; ++k) {
     if(cmp_[i][j] == cmp_[j][k] && cmp_[i][j] != cmp_[i][k]) {
-      report_error(caller, "comparison function is not transitive");
+      report_error(ctx, "comparison function is not transitive");
       goto trans_check_done;
     }
   }
@@ -207,17 +250,19 @@ trans_check_done:
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(bsearch);
-  check_basic(__func__, cmp, key, data, n, sz);
-  check_total(__func__, cmp, 0, data, n, sz);  // manpage does not require this but still
-  check_sorted(__func__, cmp, key, data, n, sz);
+  ErrorContext ctx = { __func__, __builtin_return_address(0), 0, 0 };
+  check_basic(&ctx, cmp, key, data, n, sz);
+  check_total(&ctx, cmp, 0, data, n, sz);  // manpage does not require this but still
+  check_sorted(&ctx, cmp, key, data, n, sz);
   return _real(key, data, n, sz, cmp);
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, int (*cmp)(const void *, const void *)) {
   MAYBE_INIT;
   GET_REAL(qsort);
-  check_basic(__func__, cmp, 0, data, n, sz);
-  check_total(__func__, cmp, 0, data, n, sz);
+  ErrorContext ctx = { __func__, __builtin_return_address(0), 0, 0 };
+  check_basic(&ctx, cmp, 0, data, n, sz);
+  check_total(&ctx, cmp, 0, data, n, sz);
   _real(data, n, sz, cmp);
 }
 
