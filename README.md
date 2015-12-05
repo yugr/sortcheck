@@ -21,15 +21,40 @@ Run your app with preloaded libsortcheck.so:
 
 You can customize behavior through SORTCHECK\_OPTIONS environment
 variable - a comma-separated list of option assignments e.g.
- $ export SORTCHECK\_OPTIONS=debug=1:max\_errors=10
+
+```
+$ export SORTCHECK\_OPTIONS=debug=1:max\_errors=10
+```
+
 Supported options are
 * max\_errors - maximum number of errors to report
 * debug - print debug info
 * print\_to\_syslog - print warnings to syslog (instead of stderr)
 
+# Applying to full distribution
+
+You can run full Linux distro under SortChecker: just add these lines
+to /etc/profile:
+
+```
+export SORTCHECK_OPTIONS=print_to_syslog=1
+export LD_PRELOAD=/home/yugr/src/sortchecker/bin/libsortcheck.so
+```
+
+and reboot.
+
+Disclaimer: in this mode libsortcheck.so will be preloaded to
+all your processes so any malfunction may permanently break your
+system. It's highly recommended to make a snapshot of your VM or
+at least backup the disk.
+
 # Build
 
 To build the tool, simply run make from project top directory.
+To enable debug builds, pass DEBUG=1 to make.
+To enable AddressSanitizer, pass SANITIZE=1 to make
+(note that libasan.so will then need to be added to LD\_PRELOAD
+together with libsortcheck.so).
 
 # Test
 
@@ -39,8 +64,9 @@ To test the tool, run test/test.sh from project top directory.
 
 Various TODOs are scattered all over the codebase.
 High-level stuff:
+* investigate errors found in Ubuntu
+* use /etc/ld.so.preload instead of LD\_PRELOAD to also cover daemons
 * print more context: program name (and args?), pid, return address (perhaps full backtrace?)
-* apply to real distribution (e.g. boot)
 * print array elements which triggered errors
 * write comments
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
