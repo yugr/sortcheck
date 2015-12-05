@@ -201,7 +201,12 @@ static void check_total(const char *caller, cmp_fun_t cmp, const char *key, cons
       fprintf(stderr, "Hello from %s interceptor!\n", __func__); \
   }
 
+#define MAYBE_INIT do {  \
+  if(!init_done) init(); \
+} while(0)
+
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
+  MAYBE_INIT;
   GET_REAL;
   check_basic(__func__, cmp, key, data, n, sz);
   check_total(__func__, cmp, 0, data, n, sz);  // manpage does not require this but still
@@ -210,6 +215,7 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, int (*cmp)(const void *, const void *)) {
+  MAYBE_INIT;
   GET_REAL;
   check_basic(__func__, cmp, 0, data, n, sz);
   check_total(__func__, cmp, 0, data, n, sz);
