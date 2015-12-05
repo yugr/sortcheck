@@ -14,7 +14,7 @@ static int max_errors = 10;
 static int print_to_syslog = 0;
 
 static int init_done = 0;
-static void __attribute__((constructor)) init() {
+static void init() {
   const char *opts;
   if(!(opts = getenv("SORTCHECK_OPTIONS")))
     return;
@@ -70,55 +70,53 @@ static unsigned checksum(const void *data, size_t sz) {
   return s1 | (s2 << 8);
 }
 
-// TODO: print program name
-
-#define report_error(where, fmt, ...) do {                                              \
-  if(num_errors < max_errors) {                                                         \
-    if(print_to_syslog)                                                                 \
-      syslog(LOG_WARNING, "error in %s: " fmt "\n", where, ##__VA_ARGS__);              \
-    else                                                                                \
-      fprintf(stderr, "sortchecker: error in %s: " fmt "\n", where, ##__VA_ARGS__);     \
-    ++num_errors;                                                                       \
-  }                                                                                     \
+#define report_error(where, fmt, ...) do {                        \
+  if(num_errors < max_errors) {                                   \
+    if(print_to_syslog)                                           \
+      syslog(LOG_WARNING, "%s: " fmt "\n", where, ##__VA_ARGS__); \
+    else                                                          \
+      fprintf(stderr, "%s: " fmt "\n", where, ##__VA_ARGS__);     \
+    ++num_errors;                                                 \
+  }                                                               \
 } while(0)
 
 // Check that comparator is stable and does not modify arguments
 static void check_basic(const char *caller, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
   const char *some = key ? key : data;
-
   size_t i;
+
+  // Check for modifying comparison functions
   for(i = 0; i < n; ++i) {
     const void *elt = (const char *)data + i * sz;
     unsigned cs = checksum(elt, sz);
-
-    int ord1, ord2;
-    ord1 = cmp(some, elt);
+    cmp(some, elt);
     if(cs != checksum(elt, sz)) {
       report_error(caller, "comparison function modifies data");
-      return;
+      break;
     }
+    cmp(elt, elt);
+    if(cs != checksum(elt, sz)) {
+      report_error(caller, "comparison function modifies data");
+      break;
+    }
+  }
 
-    ord2 = cmp(some, elt);
-    if(ord1 != ord2) {
+  // Check for non-constant return value
+  for(i = 0; i < n; ++i) {
+    const void *elt = (const char *)data + i * sz;
+    if(cmp(some, elt) != cmp(some, elt)) {
       report_error(caller, "comparison function returns unstable results");
-      return;
+      break;
     }
+  }
 
-    ord1 = cmp(elt, elt);
-    if(cs != checksum(elt, sz)) {
-      report_error(caller, "comparison function modifies data");
-      return;
-    }
-
-    if(ord1 != 0) {
+  // Check that equality is respected
+  for(i = 0; i < n; ++i) {
+    const void *elt = (const char *)data + i * sz;
+    // TODO: it may make sense to compare different but equal elements?
+    if(0 != cmp(elt, elt)) {
       report_error(caller, "comparison function returns non-zero for equal elements");
-      return;
-    }
-
-    ord2 = cmp(elt, elt);
-    if(ord1 != ord2) {
-      report_error(caller, "comparison function returns unstable results");
-      return;
+      break;
     }
   }
 }
@@ -134,7 +132,7 @@ static void check_sorted(const char *caller, cmp_fun_t cmp, const char *key, con
       int new_order = cmp(key, elt);
       if(new_order > order) {
         report_error(caller, "processed array is not sorted");
-	return;
+	return;  // Return to stop further error reporting
       }
       order = new_order;
     }
@@ -145,7 +143,7 @@ static void check_sorted(const char *caller, cmp_fun_t cmp, const char *key, con
     const void *prev = (const char *)elt - sz;
     if(cmp(prev, elt) > 0) {
       report_error(caller, "processed array is not sorted");
-      return;
+      break;
     }
   }
 }
@@ -175,9 +173,10 @@ static void check_total(const char *caller, cmp_fun_t cmp, const char *key, cons
   for(j = 0; j < n; ++j) {
     if(cmp_[i][j] != -cmp_[j][i]) {
       report_error(caller, "comparison function is not symmetric");
-      return;
+      goto sym_check_done;
     }
   }
+sym_check_done:
 
   // Transitivity
   // FIXME: slow slow...
@@ -186,17 +185,19 @@ static void check_total(const char *caller, cmp_fun_t cmp, const char *key, cons
   for(k = 0; k < n; ++k) {
     if(cmp_[i][j] == cmp_[j][k] && cmp_[i][j] != cmp_[i][k]) {
       report_error(caller, "comparison function is not transitive");
-      return;
+      goto trans_check_done;
     }
   }
+trans_check_done:
+  return;
 }
 
-#define GET_REAL \
-  static void *_real; \
-  if(!_real) { \
-    _real = dlsym(RTLD_NEXT, __func__); \
-    if(debug) \
-      fprintf(stderr, "Hello from %s interceptor!\n", __func__); \
+#define GET_REAL(sym)                                        \
+  static typeof(sym) *_real;                                 \
+  if(!_real) {                                               \
+    _real = (typeof(sym) *)dlsym(RTLD_NEXT, #sym);           \
+    if(debug)                                                \
+      fprintf(stderr, "Hello from %s interceptor!\n", #sym); \
   }
 
 #define MAYBE_INIT do {  \
@@ -205,19 +206,19 @@ static void check_total(const char *caller, cmp_fun_t cmp, const char *key, cons
 
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
-  GET_REAL;
+  GET_REAL(bsearch);
   check_basic(__func__, cmp, key, data, n, sz);
   check_total(__func__, cmp, 0, data, n, sz);  // manpage does not require this but still
   check_sorted(__func__, cmp, key, data, n, sz);
-  return ((void *(*)(const void *, const void *, size_t, size_t, cmp_fun_t))_real)(key, data, n, sz, cmp);
+  return _real(key, data, n, sz, cmp);
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, int (*cmp)(const void *, const void *)) {
   MAYBE_INIT;
-  GET_REAL;
+  GET_REAL(qsort);
   check_basic(__func__, cmp, 0, data, n, sz);
   check_total(__func__, cmp, 0, data, n, sz);
-  ((void *(*)(void *, size_t, size_t, cmp_fun_t))_real)(data, n, sz, cmp);
+  _real(data, n, sz, cmp);
 }
 
 // TODO: qsort_r
