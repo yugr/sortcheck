@@ -1,0 +1,20 @@
+#!/bin/sh -e
+
+# Simple script for benchmarking SortChecker.
+# Example:
+# $ ~/src/sortchecker/scripts/benchmark 'make clean && make -j2'
+
+ROOT=$(dirname $0)/..
+
+echo 'Normal runs'
+unset SORTCHECK_OPTIONS LD_PRELOAD
+time /bin/bash -c "$@" > /dev/null
+time /bin/bash -c "$@" > /dev/null
+time /bin/bash -c "$@" > /dev/null
+
+echo 'Checked runs'
+export LD_PRELOAD=$ROOT/bin/libsortcheck.so
+export SORTCHECK_OPTIONS=print_to_syslog=1
+time /bin/bash -c "$@" > /dev/null
+time /bin/bash -c "$@" > /dev/null
+time /bin/bash -c "$@" > /dev/null
