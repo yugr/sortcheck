@@ -7,9 +7,11 @@
 
 #include <dlfcn.h>
 #include <syslog.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <checksum.h>
-#include <proc_maps.h>
+#include <proc_info.h>
 
 #define EXPORT __attribute__((visibility("default")))
 
@@ -20,13 +22,21 @@ static int print_to_syslog = 0;
 
 // Other pieces of state
 static int init_done = 0;
-static ProcMap *maps;
-static size_t nmaps;
+static ProcMap *maps = 0;
+static char *proc_name = 0;
+static char *proc_cmdline = 0;
+static size_t nmaps = 0;
 static int num_errors = 0;
+static long proc_pid = -1;
+
 
 static void fini() {
   if(maps)
     free(maps);
+  if(proc_cmdline)
+    free(proc_cmdline);
+  if(proc_name)
+    free(proc_name);
 }
 
 static void init() {
@@ -56,6 +66,7 @@ static void init() {
         debug = atoi(value);
       } else if(0 == strcmp(name, "print_to_syslog")) {
         print_to_syslog = atoi(value);;
+	openlog("", 0, LOG_USER);
       } else if(0 == strcmp(name, "max_errors")) {
         max_errors = atoi(value);
       } else {
@@ -75,8 +86,11 @@ static void init() {
       fprintf(stderr, "  %50s: %p-%p\n", &maps[i].name[0], maps[i].begin_addr, maps[i].end_addr);
   }
 
+  get_proc_cmdline(&proc_name, &proc_cmdline);
+
+  proc_pid = (long)getpid();
+
   atexit(fini);
-  void *tmp = fini; tmp = tmp;
 
   init_done = 1;
 }
@@ -112,13 +126,17 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
     }
   }
 
-  char newfmt[256];
-  snprintf(newfmt, sizeof(newfmt), "%s (called from %s+%zx): %s\n", ctx->func, ctx->caller_module, ctx->caller_offset, fmt);
+  char body[128];
+  vsnprintf(body, sizeof(body), fmt, ap);
+
+  // TODO: some parts of the message may be precomputed
+  char full_msg[256];
+  snprintf(full_msg, sizeof(full_msg), "%s[%ld]: %s: %s (called from %s+%zx, cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->caller_module, ctx->caller_offset, proc_cmdline);
 
   if(print_to_syslog)
-    vsyslog(LOG_WARNING, newfmt, ap);
+    syslog(LOG_WARNING, "%s", full_msg);
   else
-    vfprintf(stderr, newfmt, ap);
+    fputs(full_msg, stderr);
 }
 
 typedef int (*cmp_fun_t)(const void *, const void *);

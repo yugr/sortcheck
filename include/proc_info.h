@@ -1,5 +1,5 @@
-#ifndef PROC_MAPS_H
-#define PROC_MAPS_H
+#ifndef PROC_INFO_H
+#define PROC_INFO_H
 
 #include <stdint.h>
 
@@ -9,5 +9,7 @@ typedef struct {
 } ProcMap;
 
 ProcMap *get_proc_maps(size_t *n);
+
+void get_proc_cmdline(char **pname, char **pcmdline);
 
 #endif

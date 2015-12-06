@@ -14,7 +14,7 @@ ifneq (,$(SANITIZE))
 endif
 LIBS = -ldl
 
-OBJS = bin/sortchecker.o bin/proc_maps.o bin/checksum.o
+OBJS = bin/sortchecker.o bin/proc_info.o bin/checksum.o
 
 $(shell mkdir -p bin)
 

@@ -65,7 +65,6 @@ Various TODOs are scattered all over the codebase.
 High-level stuff:
 * investigate errors found in Ubuntu
 * use /etc/ld.so.preload instead of LD\_PRELOAD to also cover daemons
-* print more context: program name (and args?), pid, return address (perhaps full backtrace?)
 * print array elements which triggered errors
 * write comments
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
