@@ -141,6 +141,10 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
 
 typedef int (*cmp_fun_t)(const void *, const void *);
 
+static inline int sign(int x) {
+  return x < 0 ? -1 : x > 0 ? 1 : 0;
+}
+
 // Check that comparator is stable and does not modify arguments
 static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
   const char *some = key ? key : data;
@@ -190,7 +194,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
     int order = 1;
     for(i = 0; i < n; ++i) {
       const void *elt = (const char *)data + i * sz;
-      int new_order = cmp(key, elt);
+      int new_order = sign(cmp(key, elt));
       if(new_order > order) {
         report_error(ctx, "processed array is not sorted");
 	return;  // Return to stop further error reporting
@@ -222,7 +226,7 @@ static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
   for(j = 0; j < n; ++j) {
     const void *a = (const char *)data + i * sz;
     const void *b = (const char *)data + j * sz;
-    cmp_[i][j] = cmp(a, b);
+    cmp_[i][j] = sign(cmp(a, b));
   }
 
   // Following axioms from http://mathworld.wolfram.com/StrictOrder.html
