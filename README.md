@@ -4,8 +4,8 @@ SortChecker is a proof-of-concept tool to detect violations
 of ordering axioms in comparison functions passed to qsort
 or bsearch routines. For complex data structures it's very
 easy to violate one of the requirements. Such violations cause
-undefined behavior and may in practice result in all sorts
-of runtime errors.
+undefined behavior and may lead to all sorts of runtime
+errors in practice.
 
 The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
@@ -82,8 +82,8 @@ tested SortChecker on Ubuntu.
 
 # Known issues
 
-* SortChecker does not detect dlopen/dlclose so addresses from
-  dynamically loaded libs will not be pretty-printed.
+* SortChecker does not detect dlopen/dlclose; this causes
+addresses from dynamically loaded libs to not be pretty-printed.
 
 # TODO
 

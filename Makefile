@@ -1,4 +1,4 @@
-CC = gcc-4.9
+CC = gcc
 CPPFLAGS = -D_GNU_SOURCE -Iinclude
 CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
 LDFLAGS = -fPIC -shared -Wl,--no-allow-shlib-undefined
