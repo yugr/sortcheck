@@ -1,7 +1,7 @@
 # What is this?
 
 SortChecker is a proof-of-concept tool to detect violations
-of order axioms in comparison functions passed to qsort
+of ordering axioms in comparison functions passed to qsort
 or bsearch routines. For complex data structures it's very
 easy to violate one of the requirements. Such violations cause
 undefined behavior and may in practice result in all sorts
@@ -13,11 +13,23 @@ It could be applied to both C and C++ programs although for the
 latter std::sort is more typical (which would probably require
 compile-time instrumentation?).
 
-The tool is a proof-of-concept so it's hacky and slow.
+The tool is a proof-of-concept so it's hacky and slower than
+necessary.
 
 # What are current results?
 
-tbd + compiler instrumentation in C++ world
+I've done some basic testing of Ubuntu 14.04 distro under
+SortChecker (open file/web browsers, navigate system menus, etc.).
+
+The tool has found errors in many programs.  Here are some examples:
+* [Libxt6: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93273)
+* [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274)
+* [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275)
+There are also reports for GCC, Firefox (libxul.so) and other heavyweight stuff
+(nautilus, Unity's unit-blah-blah, etc.)
+
+I haven't seen a noticeable slowdown when working in checked Ubuntu
+although CPU-intensive tests (e.g. building a C++ project) seem to have a ~15% slowdown.
 
 # Usage
 
