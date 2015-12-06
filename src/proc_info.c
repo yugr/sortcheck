@@ -89,21 +89,19 @@ void get_proc_cmdline(char **pname, char **pcmdline) {
 
   size_t size = 1024;
   char *cmdline = malloc(size);
-  if(!fgets(cmdline, size, p))
-    return;
 
+  size = fread(cmdline, 1, size, p);
+
+  // FIXME: this expects that progname was fully read into buffer
   *pname = strdup(basename(cmdline));
 
-  char *cur;
-  for(cur = cmdline; 1; ++cur) {
-    if(cur[0])
-      continue;
-
-    if(!cur[1])
-      break;
-
-    cur[0] = ' ';
+  size_t i;
+  for(i = 0; i < size; ++i) {
+    if(!cmdline[i])
+      cmdline[i] = ' ';
   }
+  cmdline[i - 1] = 0;
+
   *pcmdline = cmdline;
 }
 
