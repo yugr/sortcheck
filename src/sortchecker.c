@@ -29,7 +29,6 @@ static size_t nmaps = 0;
 static int num_errors = 0;
 static long proc_pid = -1;
 
-
 static void fini() {
   if(maps)
     free(maps);
@@ -51,8 +50,10 @@ static void init() {
       const char *name = cur;
 
       char *assign = strchr(cur, '=');
-      if(!assign)
-        break;
+      if(!assign) {
+        fprintf(stderr, "sortcheck: missing '=' in '%s'\n", cur);
+        exit(1);
+      }
       *assign = 0;
 
       char *value = assign + 1;
