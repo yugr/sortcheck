@@ -20,6 +20,9 @@ $(shell mkdir -p bin)
 
 all: bin/libsortcheck.so
 
+check:
+	test/test.sh
+
 bin/libsortcheck.so: $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
 
@@ -29,5 +32,5 @@ bin/%.o: src/%.c Makefile
 clean:
 	rm -f bin/*
 
-.PHONY: clean all
+.PHONY: clean all check
 
