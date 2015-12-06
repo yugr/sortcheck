@@ -25,6 +25,7 @@ The tool has found errors in many programs.  Here are some examples:
 * [Libxt6: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93273)
 * [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274)
 * [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275)
+
 There are also reports for GCC, Firefox (libxul.so) and other heavyweight stuff
 (nautilus, Unity's unit-blah-blah, etc.)
 
@@ -53,14 +54,15 @@ Supported options are
 
 # Applying to full distribution
 
-You can run full Linux distro under SortChecker: just add
-full path to libsortcheck.so to /etc/ld.so.preload and
+You can run full Linux distro under SortChecker:
+* add full path to libsortcheck.so to /etc/ld.so.preload
+* set options in /etc/profile:
 
-```
-export SORTCHECK_OPTIONS=print_to_syslog=1
-```
+  ```
+  export SORTCHECK_OPTIONS=print_to_syslog=1
+  ```
 
-to /etc/profile and reboot.
+* reboot
 
 Disclaimer: in this mode libsortcheck.so will be preloaded to
 all your processes so any malfunction may permanently break your
@@ -75,12 +77,12 @@ To enable AddressSanitizer, pass SANITIZE=1 to make
 (note that libasan.so will then need to be added to LD\_PRELOAD
 together with libsortcheck.so).
 
-To test the tool, run test/test.sh from project top directory
-(I've only tested this on Ubuntu).
+To test the tool, run make check. Note that I've myself only
+tested SortChecker on Ubuntu.
 
 # Known issues
 
-* Sortchecker does not detect dlopen/dlclose so addresses from
+* SortChecker does not detect dlopen/dlclose so addresses from
   dynamically loaded libs will not be pretty-printed.
 
 # TODO
