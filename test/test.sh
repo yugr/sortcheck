@@ -27,7 +27,12 @@ for t in test/*.c; do
   else
     unset SORTCHECK_OPTIONS
   fi
-  if ! LD_PRELOAD=bin/libsortcheck.so bin/a.out 2>bin/a.out.log; then
+  if has_option $t CMDLINE; then
+    ARGS=$(get_option $t CMDLINE)
+  else
+    ARGS=
+  fi
+  if ! LD_PRELOAD=bin/libsortcheck.so bin/a.out $ARGS 2>bin/a.out.log; then
     error "$t: test exited with a non-zero exit code"
   elif ! has_option $t CHECK && ! has_option $t CHECK-NOT && test -s bin/a.out.log; then
     error "$t: non-empty stderr"

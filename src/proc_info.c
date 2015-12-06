@@ -89,35 +89,21 @@ void get_proc_cmdline(char **pname, char **pcmdline) {
 
   size_t size = 1024;
   char *cmdline = malloc(size);
+  if(!fgets(cmdline, size, p))
+    return;
 
-  char buf[128];
-  char *cur = cmdline;
-  size_t cur_size = size;
-  --cur_size; // Reserve one byte for terminating 0
-  while(fgets(buf, sizeof(buf), p)) { // FIXME: check if buffer was long enough
-    if(cur != cmdline) { // No leading white
-      if(cur_size == 0)
-        break;
-      *cur = ' ';
-      --cur_size;
-      ++cur;
-    }
+  *pname = strdup(basename(cmdline));
 
-    size_t buf_len = strlen(buf);
-    if(buf_len > cur_size)
+  char *cur;
+  for(cur = cmdline; 1; ++cur) {
+    if(cur[0])
+      continue;
+
+    if(!cur[1])
       break;
-    strcpy(cur, buf);
-    cur_size -= buf_len;
-    cur += buf_len;
+
+    cur[0] = ' ';
   }
-  assert((size_t)(cur - cmdline) < size);
-  *cur = 0;
-
   *pcmdline = cmdline;
-
-  char *white = strchr(cmdline, ' ');
-  if(!white)
-    white = cmdline + strlen(cmdline);
-  *pname = strndup(cmdline, white - cmdline);
 }
 
