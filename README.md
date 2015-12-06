@@ -63,9 +63,9 @@ To test the tool, run test/test.sh from project top directory.
 
 Various TODOs are scattered all over the codebase.
 High-level stuff:
-* investigate errors found in Ubuntu
-* use /etc/ld.so.preload instead of LD\_PRELOAD to also cover daemons
-* print array elements which triggered errors
-* write comments
+* (!!) investigate errors found in Ubuntu
+* (!) print array elements which triggered errors
+* (!) write comments
+* do not report repetative errors for some comparison function
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
 
