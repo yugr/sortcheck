@@ -64,6 +64,11 @@ together with libsortcheck.so).
 
 To test the tool, run test/test.sh from project top directory.
 
+# Known issues
+
+* Sortchecker does not detect dlopen/dlclose so addresses from
+  dynamically loaded libs will not be pretty-printed.
+
 # TODO
 
 Various TODOs are scattered all over the codebase.
