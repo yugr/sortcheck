@@ -21,7 +21,7 @@ necessary.
 I've done some basic testing of Ubuntu 14.04 distro under
 SortChecker (open file/web browsers, navigate system menus, etc.).
 
-The tool has found errors in many programs.  Here are some tropheys:
+The tool has found errors in many programs.  Here are some trophies:
 * [Libxt6: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93273)
 * [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274)
 * [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275)
