@@ -34,13 +34,16 @@ although CPU-intensive tests (e.g. building a C++ project) seem to have a ~15% s
 # Usage
 
 Run your app with preloaded libsortcheck.so:
- $ LD\_PRELOAD=libsortcheck.so myapp ...
+
+```
+ $ LD_PRELOAD=libsortcheck.so myapp ...
+```
 
 You can customize behavior through SORTCHECK\_OPTIONS environment
 variable - a comma-separated list of option assignments e.g.
 
 ```
-$ export SORTCHECK\_OPTIONS=debug=1:max\_errors=10
+$ export SORTCHECK_OPTIONS=debug=1:max_errors=10
 ```
 
 Supported options are
@@ -72,9 +75,8 @@ To enable AddressSanitizer, pass SANITIZE=1 to make
 (note that libasan.so will then need to be added to LD\_PRELOAD
 together with libsortcheck.so).
 
-# Test
-
-To test the tool, run test/test.sh from project top directory.
+To test the tool, run test/test.sh from project top directory
+(I've only tested this on Ubuntu).
 
 # Known issues
 
@@ -85,10 +87,11 @@ To test the tool, run test/test.sh from project top directory.
 
 Various TODOs are scattered all over the codebase.
 High-level stuff:
-* (!!) investigate errors found in Ubuntu
+* (!!) investigate remaining errors found in Ubuntu
 * (!!) verify that Ubuntu is stable under libsortcheck
-* (!) print array elements which triggered errors
-* (!) write comments
+* (!) print array elements which triggered errors (i.e. hex dumps)
+* (!) write code comments
+* intercept dlopen/dlclose to be able to pretty-print their addresses
 * print backtraces (rather than just address of the caller)
 * do not report repetative errors for some comparison function
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
