@@ -196,7 +196,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
       const void *elt = (const char *)data + i * sz;
       int new_order = sign(cmp(key, elt));
       if(new_order > order) {
-        report_error(ctx, "processed array is not sorted");
+        report_error(ctx, "processed array is not sorted at index %zd", i);
 	return;  // Return to stop further error reporting
       }
       order = new_order;
@@ -207,7 +207,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
     const void *elt = (const char *)data + i * sz;
     const void *prev = (const char *)elt - sz;
     if(cmp(prev, elt) > 0) {
-      report_error(ctx, "processed array is not sorted");
+      report_error(ctx, "processed array is not sorted at index %zd", i);
       break;
     }
   }
