@@ -131,7 +131,7 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
 
   // TODO: some parts of the message may be precomputed
   char full_msg[256];
-  snprintf(full_msg, sizeof(full_msg), "%s[%ld]: %s: %s (called from %s+%zx, cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->caller_module, ctx->caller_offset, proc_cmdline);
+  snprintf(full_msg, sizeof(full_msg), "%s[%ld]: %s: %s (called from %p (%s+%zx), cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->ret_addr, ctx->caller_module, ctx->caller_offset, proc_cmdline);
 
   if(print_to_syslog)
     syslog(LOG_WARNING, "%s", full_msg);
