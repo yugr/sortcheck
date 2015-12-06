@@ -2,11 +2,16 @@
 
 SortChecker is a proof-of-concept tool to detect violations
 of order axioms in comparison functions passed to qsort
-or bsearch routines. Such violations have undefined behavior
-and may in practice cause all sorts of runtime errors.
+or bsearch routines. For complex data structures it's very
+easy to violate one of the requirements. Such violations cause
+undefined behavior and may in practice result in all sorts
+of runtime errors.
 
 The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
+It could be applied to both C and C++ programs although for the
+latter std::sort is more typical (which would probably require
+compile-time instrumentation?).
 
 The tool is a proof-of-concept so it's hacky and slow.
 
@@ -64,8 +69,10 @@ To test the tool, run test/test.sh from project top directory.
 Various TODOs are scattered all over the codebase.
 High-level stuff:
 * (!!) investigate errors found in Ubuntu
+* (!!) verify that Ubuntu is stable under libsortcheck
 * (!) print array elements which triggered errors
 * (!) write comments
+* print backtraces (rather than just address of the caller)
 * do not report repetative errors for some comparison function
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
 
