@@ -33,20 +33,19 @@ Supported options are
 
 # Applying to full distribution
 
-You can run full Linux distro under SortChecker: just add these lines
-to /etc/profile:
+You can run full Linux distro under SortChecker: just add
+full path to libsortcheck.so to /etc/ld.so.preload and
 
 ```
 export SORTCHECK_OPTIONS=print_to_syslog=1
-export LD_PRELOAD=/home/yugr/src/sortchecker/bin/libsortcheck.so
 ```
 
-and reboot.
+to /etc/profile and reboot.
 
 Disclaimer: in this mode libsortcheck.so will be preloaded to
 all your processes so any malfunction may permanently break your
-system. It's highly recommended to make a snapshot of your VM or
-at least backup the disk.
+system. It's highly recommended to backup the disk or make
+snapshot of VM.
 
 # Build
 
