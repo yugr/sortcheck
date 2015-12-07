@@ -69,8 +69,8 @@ ProcMap *get_proc_maps(size_t *n) {
       strncpy(&maps[i].name[0], name, sizeof(maps[i].name));  // Hey, sizeof on arrays work!
       maps[i].name[sizeof(maps[i].name) - 1] = 0;  // Ugly...
       if(++i >= max_maps) {
-	max_maps *= 2;
-	maps = realloc(maps, max_maps * sizeof(ProcMap));
+        max_maps *= 2;
+        maps = realloc(maps, max_maps * sizeof(ProcMap));
       }
     }
   } // while

@@ -67,7 +67,7 @@ static void init() {
         debug = atoi(value);
       } else if(0 == strcmp(name, "print_to_syslog")) {
         print_to_syslog = atoi(value);;
-	openlog("", 0, LOG_USER);
+        openlog("", 0, LOG_USER);
       } else if(0 == strcmp(name, "max_errors")) {
         max_errors = atoi(value);
       } else {
@@ -116,9 +116,9 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
     size_t i;
     for(i = 0; i < nmaps; ++i) {
       if(maps[i].begin_addr <= ctx->ret_addr && ctx->ret_addr < maps[i].end_addr) {
-	ctx->caller_module = &maps[i].name[0];
-	ctx->caller_offset = (const char *)ctx->ret_addr - (const char *)maps[i].begin_addr;
-	break;
+        ctx->caller_module = &maps[i].name[0];
+        ctx->caller_offset = (const char *)ctx->ret_addr - (const char *)maps[i].begin_addr;
+        break;
       }
     }
     if(i == nmaps) {
@@ -130,14 +130,29 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
   char body[128];
   vsnprintf(body, sizeof(body), fmt, ap);
 
-  // TODO: some parts of the message may be precomputed
-  char full_msg[256];
-  snprintf(full_msg, sizeof(full_msg), "%s[%ld]: %s: %s (called from %p (%s+%zx), cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->ret_addr, ctx->caller_module, ctx->caller_offset, proc_cmdline);
+  char buf[256];
+
+  char *full_msg = buf;
+  size_t full_msg_size = sizeof(buf);
+  size_t i;
+  for(i = 0; i < 2; ++i) {
+    // TODO: some parts of the message may be precomputed
+    size_t need = snprintf(full_msg, full_msg_size, "%s[%ld]: %s: %s (called from %p (%s+%zx), cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->ret_addr, ctx->caller_module, ctx->caller_offset, proc_cmdline);
+    if(i == 0 && need < sizeof(body))  // Did it fit to local buf?
+      break;
+    if(i == 0 && need >= sizeof(body)) {  // It didn't - go ahead and malloc
+      full_msg_size = need + 1;
+      full_msg = malloc(full_msg_size);
+    }
+  }
 
   if(print_to_syslog)
     syslog(LOG_WARNING, "%s", full_msg);
   else
     fputs(full_msg, stderr);
+
+  if(full_msg != buf)
+    free(full_msg);
 }
 
 typedef int (*cmp_fun_t)(const void *, const void *);
@@ -198,7 +213,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
       int new_order = sign(cmp(key, elt));
       if(new_order > order) {
         report_error(ctx, "processed array is not sorted at index %zd", i);
-	return;  // Return to stop further error reporting
+        return;  // Return to stop further error reporting
       }
       order = new_order;
     }
