@@ -23,8 +23,8 @@ SortChecker (open file/web browsers, navigate system menus, etc.).
 
 The tool has found errors in many programs.  Here are some trophies:
 * [Libxt6: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93273)
-* [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274)
-* [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275)
+* [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274) (fixed)
+* [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275) (fixed)
 
 There are also reports for GCC, Firefox (libxul.so) and other heavyweight stuff
 (nautilus, Unity's unit-blah-blah, etc.)
@@ -93,8 +93,11 @@ High-level stuff:
 * (!!) verify that Ubuntu is stable under libsortcheck
 * (!) print array elements which triggered errors (i.e. hex dumps)
 * (!) write code comments
-* intercept dlopen/dlclose to be able to pretty-print their addresses
-* print backtraces (rather than just address of the caller)
+* (!) intercept dlopen/dlclose to be able to pretty-print their addresses
+* ensure that code is thread-safe
+* print complete backtrace (rather than just address of caller)
+* more intelligent error suppression
+* provide flag(s) to tune aggressiveness of the checker (e.g. how many elements to consider, etc.)
 * do not report repetative errors for some comparison function
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
 
