@@ -116,7 +116,8 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
-  ++num_errors;  // Racy but ok
+  if(++num_errors > max_errors)  // Racy but ok
+    return;
 
   if(!ctx->cmp_module) {
     // Lazily compute modules (no race!)
