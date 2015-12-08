@@ -8,9 +8,13 @@ ifeq (,$(DEBUG))
 else
   CFLAGS += -O0
 endif
-ifneq (,$(SANITIZE))
+ifneq (,$(ASAN))
   CFLAGS += -fsanitize=address
   LDFLAGS += -Wl,--allow-shlib-undefined -fsanitize=address
+endif
+ifneq (,$(UBSAN))
+  CFLAGS += -fsanitize=undefined
+  LDFLAGS += -fsanitize=undefined
 endif
 LIBS = -ldl
 
@@ -23,14 +27,36 @@ all: bin/libsortcheck.so
 check:
 	test/test.sh
 
-bin/libsortcheck.so: $(OBJS) Makefile
+bin/libsortcheck.so: $(OBJS) bin/FLAGS Makefile
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
 
-bin/%.o: src/%.c Makefile
+bin/%.o: src/%.c Makefile bin/FLAGS
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+bin/FLAGS: FORCE
+	if test x"$(CFLAGS) $(LDFLAGS)" != x"$$(cat $@)"; then \
+		echo "$(CFLAGS) $(LDFLAGS)" > $@; \
+	fi
+
+# TODO: add depend target
+
+help:
+	@echo "Common targets:"
+	@echo "  all        Build all executables and scripts"
+	@echo "  clean      Clean all build files and temps."
+	@echo "  help       Print help on build options."
+	@echo ""
+	@echo "Less common:"
+	@echo "  check      Run regtests."
+	@echo ""
+	@echo "Build options:"
+	@echo "  DEBUG=1  Build debug version of code."
+	@echo "  ASAN=1   Build with ASan checks."
+	@echo "  UBSAN=1  Build with UBSan checks."
+
 
 clean:
 	rm -f bin/*
 
-.PHONY: clean all check
+.PHONY: clean all check FORCE help
 

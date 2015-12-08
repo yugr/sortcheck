@@ -10,8 +10,9 @@ errors in practice.
 The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
 It could be applied to both C and C++ programs although for the
-latter std::sort is more typical (which would probably require
-compile-time instrumentation?).
+latter std::sort and std::binary\_search are more typical.
+Checking those would require (rather simple) compile-time
+instrumentation.
 
 The tool is a proof-of-concept so it's hacky and slower than
 necessary.
@@ -73,10 +74,11 @@ snapshot of VM.
 # Build
 
 To build the tool, simply run make from project top directory.
-To enable debug builds, pass DEBUG=1 to make.
-To enable AddressSanitizer, pass SANITIZE=1 to make
-(note that libasan.so will then need to be added to LD\_PRELOAD
-together with libsortcheck.so).
+Makefile supports various candies (e.g. AddressSanitizer,
+debug build, etc.) - run make help for mode details.
+
+If you enable AddressSanitizer you'll need to add libasan.so
+to LD\_PRELOAD (prior to libsortcheck.so).
 
 To test the tool, run make check. Note that I've myself only
 tested SortChecker on Ubuntu.
@@ -92,11 +94,12 @@ Various TODOs are scattered all over the codebase.
 High-level stuff:
 * (!!) investigate remaining errors found in Ubuntu (GCC)
 * (!!) verify that Ubuntu is stable under libsortcheck
+* (!!) support non-generic bsearch callbacks
 * (!) print array elements which triggered errors (i.e. hex dumps)
-* (!) write code comments
 * (!) intercept dlopen/dlclose to be able to pretty-print their addresses
+* write code comments
 * ensure that code is thread-safe
-* print complete backtrace (rather than just address of caller)
+* print complete backtrace rather than just address of caller (libunwind?)
 * more intelligent error suppression
 * provide flag(s) to tune aggressiveness of the checker (e.g. how many elements to consider, etc.)
 * do not report repetative errors for some comparison function
