@@ -26,8 +26,9 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Libxt6: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93273)
 * [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274) (fixed)
 * [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275) (fixed)
+* [Cpio: HOL\_ENTRY\_PTRCMP triggers undefined behavior](http://savannah.gnu.org/bugs/index.php?46638)
 
-There are also numerous reports for GCC, Firefox (libxul.so) and other heavyweight
+There are also numerous reports for GCC (in progress), Firefox (libxul.so) and other heavyweight
 stuff (nautilus, Unity apps, etc.).
 
 I haven't seen a noticeable slowdown when working in checked Ubuntu
