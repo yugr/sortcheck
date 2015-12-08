@@ -51,6 +51,7 @@ Supported options are
 * max\_errors - maximum number of errors to report
 * debug - print debug info
 * print\_to\_syslog - print warnings to syslog (instead of stderr)
+* do\_report\_error - print reports (only used for benchmarking)
 
 # Applying to full distribution
 

@@ -28,6 +28,7 @@ static char *proc_cmdline = 0;
 static size_t nmaps = 0;
 static int num_errors = 0;
 static long proc_pid = -1;
+static int do_report_error = 1;
 
 static void fini() {
   if(maps)
@@ -68,6 +69,8 @@ static void init() {
       } else if(0 == strcmp(name, "print_to_syslog")) {
         print_to_syslog = atoi(value);;
         openlog("", 0, LOG_USER);
+      } else if(0 == strcmp(name, "report_error")) {
+        do_report_error = atoi(value);
       } else if(0 == strcmp(name, "max_errors")) {
         max_errors = atoi(value);
       } else {
@@ -104,6 +107,9 @@ typedef struct {
 } ErrorContext;
 
 static void report_error(ErrorContext *ctx, const char *fmt, ...) {
+  if(!do_report_error)
+    return;
+
   va_list ap;
   va_start(ap, fmt);
 
