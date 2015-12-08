@@ -49,10 +49,15 @@ $ export SORTCHECK_OPTIONS=debug=1:max_errors=10
 ```
 
 Supported options are
-* max\_errors - maximum number of errors to report
-* debug - print debug info
-* print\_to\_syslog - print warnings to syslog (instead of stderr)
-* do\_report\_error - print reports (only used for benchmarking)
+* max\_errors - maximum number of errors to report (default 10)
+* debug - print debug info (default false)
+* print\_to\_syslog - print warnings to syslog instead of stderr
+(default false)
+* do\_report\_error - print reports (only used for benchmarking,
+default true)
+* bad\_bsearch - some programs (e.g. GCC) use restricted form of
+bsearch which does not support all kinds of checks that SortChecker
+has; this option (false by default) disables these checks
 
 # Applying to full distribution
 

@@ -18,6 +18,7 @@
 // Runtime options
 static int debug = 0;
 static int max_errors = 10;
+static int bad_bsearch = 0;
 static int print_to_syslog = 0;
 
 // Other pieces of state
@@ -73,6 +74,8 @@ static void init() {
         do_report_error = atoi(value);
       } else if(0 == strcmp(name, "max_errors")) {
         max_errors = atoi(value);
+      } else if(0 == strcmp(name, "bad_bsearch")) {
+        bad_bsearch = atoi(value);
       } else {
         fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
         exit(1);
@@ -179,10 +182,12 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
       report_error(ctx, "comparison function modifies data");
       break;
     }
-    cmp(elt, elt);
-    if(cs != checksum(elt, sz)) {
-      report_error(ctx, "comparison function modifies data");
-      break;
+    if(!key || !bad_bsearch) {
+      cmp(elt, elt);
+      if(cs != checksum(elt, sz)) {
+        report_error(ctx, "comparison function modifies data");
+        break;
+      }
     }
   }
 
@@ -195,13 +200,15 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
     }
   }
 
-  // Check that equality is respected
-  for(i = 0; i < n; ++i) {
-    const void *elt = (const char *)data + i * sz;
-    // TODO: it may make sense to compare different but equal elements?
-    if(0 != cmp(elt, elt)) {
-      report_error(ctx, "comparison function returns non-zero for equal elements");
-      break;
+  if(!key || !bad_bsearch) {
+    // Check that equality is respected
+    for(i = 0; i < n; ++i) {
+      const void *elt = (const char *)data + i * sz;
+      // TODO: it may make sense to compare different but equal elements?
+      if(0 != cmp(elt, elt)) {
+        report_error(ctx, "comparison function returns non-zero for equal elements");
+        break;
+      }
     }
   }
 }
@@ -223,18 +230,23 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
     }
   }
 
-  for(i = 1; i < n; ++i) {
-    const void *elt = (const char *)data + i * sz;
-    const void *prev = (const char *)elt - sz;
-    if(cmp(prev, elt) > 0) {
-      report_error(ctx, "processed array is not sorted at index %zd", i);
-      break;
+  if(!key || !bad_bsearch) {
+    for(i = 1; i < n; ++i) {
+      const void *elt = (const char *)data + i * sz;
+      const void *prev = (const char *)elt - sz;
+      if(cmp(prev, elt) > 0) {
+        report_error(ctx, "processed array is not sorted at index %zd", i);
+        break;
+      }
     }
   }
 }
 
 // Check that ordering is total
 static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+  if(key && bad_bsearch)
+    return;
+
   key = key;  // TODO: check key as well
 
   int8_t cmp_[32][32];
