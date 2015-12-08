@@ -116,9 +116,7 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
-  if(num_errors >= max_errors)
-    return;
-  ++num_errors;
+  ++num_errors;  // Racy but ok
 
   if(!ctx->cmp_module) {
     // Lazily compute modules (no race!)
@@ -293,19 +291,23 @@ trans_check_done:
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(bsearch);
-  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
-  check_basic(&ctx, cmp, key, data, n, sz);
-  check_total(&ctx, cmp, 0, data, n, sz);  // manpage does not require this but still
-  check_sorted(&ctx, cmp, key, data, n, sz);
+  if(num_errors < max_errors) {
+    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+    check_basic(&ctx, cmp, key, data, n, sz);
+    check_total(&ctx, cmp, 0, data, n, sz);  // manpage does not require this but still
+    check_sorted(&ctx, cmp, key, data, n, sz);
+  }
   return _real(key, data, n, sz, cmp);
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, int (*cmp)(const void *, const void *)) {
   MAYBE_INIT;
   GET_REAL(qsort);
-  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
-  check_basic(&ctx, cmp, 0, data, n, sz);
-  check_total(&ctx, cmp, 0, data, n, sz);
+  if(num_errors < max_errors) {
+    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+    check_basic(&ctx, cmp, 0, data, n, sz);
+    check_total(&ctx, cmp, 0, data, n, sz);
+  }
   _real(data, n, sz, cmp);
 }
 
