@@ -1,6 +1,11 @@
 #!/bin/sh -e
 
-# Script to simplify debugging of SortChecker.
+# Script to simplify debugging with SortChecker.
 
-gdb -ex 'set environment LD_PRELOAD bin/libsortcheck.so' -ex 'set pagination off' --args "$@"
+gdb \
+  -ex "set environment LD_PRELOAD $(dirname $0)/../bin/libsortcheck.so" \
+  -ex 'set pagination off' \
+  -ex 'break report_error' \
+  -ex run \
+  --args "$@"
 
