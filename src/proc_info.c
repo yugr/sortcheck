@@ -105,3 +105,11 @@ void get_proc_cmdline(char **pname, char **pcmdline) {
   *pcmdline = cmdline;
 }
 
+const ProcMap *find_proc_map_for_addr(const ProcMap *maps, size_t n, const void *addr) {
+  size_t i;
+  for(i = 0; i < n; ++i)
+    if(maps[i].begin_addr <= addr && addr < maps[i].end_addr)
+      return &maps[i];
+  return 0;
+}
+

@@ -101,6 +101,9 @@ static void init() {
 
 typedef struct {
   const char *func;
+  const void *cmp_addr;
+  const char *cmp_module;
+  size_t cmp_offset;
   const void *ret_addr;
   const char *caller_module;
   size_t caller_offset;
@@ -117,20 +120,16 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
     return;
   ++num_errors;
 
-  if(!ctx->caller_module) {
-    // Lazily compute caller's module (no race!)
-    size_t i;
-    for(i = 0; i < nmaps; ++i) {
-      if(maps[i].begin_addr <= ctx->ret_addr && ctx->ret_addr < maps[i].end_addr) {
-        ctx->caller_module = &maps[i].name[0];
-        ctx->caller_offset = (const char *)ctx->ret_addr - (const char *)maps[i].begin_addr;
-        break;
-      }
-    }
-    if(i == nmaps) {
-      ctx->caller_module = "<unknown>";
-      ctx->caller_offset = 0;
-    }
+  if(!ctx->cmp_module) {
+    // Lazily compute modules (no race!)
+
+    const ProcMap *map_for_cmp = find_proc_map_for_addr(maps, nmaps, ctx->cmp_addr);
+    ctx->cmp_module = map_for_cmp ? &map_for_cmp->name[0] : "<unknown>";
+    ctx->cmp_offset = map_for_cmp ? ((const char *)ctx->cmp_addr - (const char *)map_for_cmp->begin_addr) : 0;
+
+    const ProcMap *map_for_caller = find_proc_map_for_addr(maps, nmaps, ctx->ret_addr);
+    ctx->caller_module = map_for_caller ? &map_for_caller->name[0] : "<unknown>";
+    ctx->caller_offset = map_for_caller ? ((const char *)ctx->ret_addr - (const char *)map_for_caller->begin_addr) : 0;
   }
 
   char body[128];
@@ -143,7 +142,7 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
   size_t i;
   for(i = 0; i < 2; ++i) {
     // TODO: some parts of the message may be precomputed
-    size_t need = snprintf(full_msg, full_msg_size, "%s[%ld]: %s: %s (called from %p (%s+%zx), cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->ret_addr, ctx->caller_module, ctx->caller_offset, proc_cmdline);
+    size_t need = snprintf(full_msg, full_msg_size, "%s[%ld]: %s: %s (comparison function %p (%s+%zx), called from %p (%s+%zx), cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->cmp_addr, ctx->cmp_module, ctx->cmp_offset, ctx->ret_addr, ctx->caller_module, ctx->caller_offset, proc_cmdline);
     if(i == 0 && need < sizeof(body))  // Did it fit to local buf?
       break;
     if(i == 0 && need >= sizeof(body)) {  // It didn't - go ahead and malloc
@@ -294,7 +293,7 @@ trans_check_done:
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(bsearch);
-  ErrorContext ctx = { __func__, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
   check_basic(&ctx, cmp, key, data, n, sz);
   check_total(&ctx, cmp, 0, data, n, sz);  // manpage does not require this but still
   check_sorted(&ctx, cmp, key, data, n, sz);
@@ -304,7 +303,7 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
 EXPORT void qsort(void *data, size_t n, size_t sz, int (*cmp)(const void *, const void *)) {
   MAYBE_INIT;
   GET_REAL(qsort);
-  ErrorContext ctx = { __func__, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
   check_basic(&ctx, cmp, 0, data, n, sz);
   check_total(&ctx, cmp, 0, data, n, sz);
   _real(data, n, sz, cmp);

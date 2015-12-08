@@ -2,8 +2,8 @@
 
 char aa[] = { 1, 2, 3 };
 
-// CMDLINE: a b c
-// CHECK: a.out.*: qsort: comparison function returns unstable results (comparison function .*a.out+.*, called from .*a.out+.*, cmdline is ".*/a.out a b c")
+// OPTS: report_error=0
+// CHECK-NOT: qsort: .* (called from
 int cmp(const void *pa, const void *pb) {
   static int x;
   return x++ % 2;
