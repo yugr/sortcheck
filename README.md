@@ -26,8 +26,8 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274) (fixed)
 * [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275) (fixed)
 
-There are also reports for GCC, Firefox (libxul.so) and other heavyweight stuff
-(nautilus, Unity's unit-blah-blah, etc.)
+There are also numerous reports for GCC, Firefox (libxul.so) and other heavyweight
+stuff (nautilus, Unity apps, etc.).
 
 I haven't seen a noticeable slowdown when working in checked Ubuntu
 although CPU-intensive tests (e.g. building a C++ project) seem to have a ~15% slowdown.
@@ -90,7 +90,7 @@ addresses from dynamically loaded libs to not be pretty-printed.
 
 Various TODOs are scattered all over the codebase.
 High-level stuff:
-* (!!) investigate remaining errors found in Ubuntu
+* (!!) investigate remaining errors found in Ubuntu (GCC)
 * (!!) verify that Ubuntu is stable under libsortcheck
 * (!) print array elements which triggered errors (i.e. hex dumps)
 * (!) write code comments
