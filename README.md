@@ -16,7 +16,7 @@ compile-time instrumentation (a simple one though).
 
 The tool is a proof-of-concept so it's hacky and slower than
 necessary. Still it's quite robust - I've successfully
-booted stock Ubuntu 14 under it.
+booted stock Ubuntu 14 and bootstrapped GCC 4.9 under it.
 
 # What are current results?
 
@@ -98,14 +98,15 @@ addresses from dynamically loaded libs to not be pretty-printed.
 # TODO
 
 Various TODOs are scattered all over the codebase.
-Here's the high-level stuff:
-* (!!) investigate remaining errors found in Ubuntu (GCC)
+Here's the high-level stuff, sorted by priority:
+* (!!) fix and report errors in GCC
+* (!!) intercept dlopen/dlclose to be able to pretty-print addresses in plugins
+* (!!) use it to debug remaining errors in Ubuntu
 * (!!) verify that Ubuntu is stable under libsortcheck
-* (!) intercept dlopen/dlclose to be able to pretty-print addresses in plugins; use this to debug remaining errors
 * (!) do not report repetative errors for some comparison function
+* (!) print complete backtrace rather than just address of caller (libunwind?)
 * write code comments
 * ensure that code is thread-safe
-* print complete backtrace rather than just address of caller (libunwind?)
 * print array elements which triggered errors (i.e. hex dumps)
 * more intelligent error suppression
 * provide flag(s) to tune aggressiveness of the checker (e.g. how many elements to consider, etc.)
