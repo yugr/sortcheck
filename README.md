@@ -11,11 +11,12 @@ The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
 It could be applied to both C and C++ programs although for the
 latter std::sort and std::binary\_search are more typical.
-Checking those would require (rather simple) compile-time
-instrumentation.
+Checking those would be more involved and require
+compile-time instrumentation (a simple one though).
 
 The tool is a proof-of-concept so it's hacky and slower than
-necessary.
+necessary. Still it's quite robust - I've successfully
+booted stock Ubuntu 14 under it.
 
 # What are current results?
 
@@ -28,8 +29,8 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275) (fixed)
 * [Cpio: HOL\_ENTRY\_PTRCMP triggers undefined behavior](http://savannah.gnu.org/bugs/index.php?46638)
 
-There are also numerous reports for GCC (in progress), Firefox (libxul.so) and other heavyweight
-stuff (nautilus, Unity apps, etc.).
+There are also numerous reports for GCC (in progress), Firefox (libxul.so) and
+other heavyweight stuff (nautilus, Unity apps, etc.).
 
 I haven't seen a noticeable slowdown when working in checked Ubuntu
 although CPU-intensive tests (e.g. building a C++ project) seem to have a ~15% slowdown.
@@ -97,17 +98,16 @@ addresses from dynamically loaded libs to not be pretty-printed.
 # TODO
 
 Various TODOs are scattered all over the codebase.
-High-level stuff:
+Here's the high-level stuff:
 * (!!) investigate remaining errors found in Ubuntu (GCC)
 * (!!) verify that Ubuntu is stable under libsortcheck
-* (!!) support non-generic bsearch callbacks
-* (!) print array elements which triggered errors (i.e. hex dumps)
-* (!) intercept dlopen/dlclose to be able to pretty-print their addresses
+* (!) intercept dlopen/dlclose to be able to pretty-print addresses in plugins; use this to debug remaining errors
+* (!) do not report repetative errors for some comparison function
 * write code comments
 * ensure that code is thread-safe
 * print complete backtrace rather than just address of caller (libunwind?)
+* print array elements which triggered errors (i.e. hex dumps)
 * more intelligent error suppression
 * provide flag(s) to tune aggressiveness of the checker (e.g. how many elements to consider, etc.)
-* do not report repetative errors for some comparison function
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
 
