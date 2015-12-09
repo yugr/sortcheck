@@ -1,5 +1,6 @@
-#include <stdint.h>
 #include <checksum.h>
+
+#include <stdint.h>
 
 unsigned checksum(const void *data, size_t sz) {
   uint16_t s1 = 0, s2 = 0;

@@ -1,10 +1,12 @@
+#include <proc_info.h>
+#include <io.h>
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
-#include <proc_info.h>
+#include <errno.h>
 
 static char *read_field(char **p) {
   // Skip leading whites
@@ -75,6 +77,8 @@ ProcMap *get_proc_maps(size_t *n) {
     }
   } // while
 
+  fclose(p);
+
   *n = i;
   return maps;
 }
@@ -83,16 +87,9 @@ void get_proc_cmdline(char **pname, char **pcmdline) {
   *pname = 0;
   *pcmdline = 0;
 
-  FILE *p = fopen("/proc/self/cmdline", "rb");
-  if(!p)
-    return;
+  size_t size;
+  char *cmdline = read_file("/proc/self/cmdline", &size);
 
-  size_t size = 1024;
-  char *cmdline = malloc(size);
-
-  size = fread(cmdline, 1, size, p);
-
-  // FIXME: this expects that progname was fully read into buffer
   *pname = strdup(basename(cmdline));
 
   size_t i;
@@ -100,7 +97,7 @@ void get_proc_cmdline(char **pname, char **pcmdline) {
     if(!cmdline[i])
       cmdline[i] = ' ';
   }
-  cmdline[i - 1] = 0;
+  cmdline[size - 1] = 0;
 
   *pcmdline = cmdline;
 }
