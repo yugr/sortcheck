@@ -57,9 +57,10 @@ Supported options are
 (default false)
 * do\_report\_error - print reports (only used for benchmarking,
 default true)
-* bad\_bsearch - some programs (e.g. GCC) use restricted form of
+* good\_bsearch - some programs (e.g. GCC) use restricted form of
 bsearch which does not support all kinds of checks that SortChecker
-has; this option (false by default) disables these checks
+has so for safety we have to disable some agressive checks by default;
+setting this option to 1 enables these checks
 
 # Applying to full distribution
 
