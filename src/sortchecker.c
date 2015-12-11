@@ -249,6 +249,7 @@ static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
 
   key = key;  // TODO: check key as well
 
+  // TODO: 2 bits enough for status
   int8_t cmp_[32][32];
   n = n > 32 ? 32 : n;
   memset(cmp_, 0, sizeof(cmp_));
