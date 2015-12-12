@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+LD_PRELOAD=$(dirname $0)/../bin/libsortcheck.so "$@"
