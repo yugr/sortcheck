@@ -28,6 +28,7 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274) (fixed)
 * [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275) (fixed)
 * [Cpio: HOL\_ENTRY\_PTRCMP triggers undefined behavior](http://savannah.gnu.org/bugs/index.php?46638)
+* [GDB: Invalid comparison functions](https://sourceware.org/bugzilla/show_bug.cgi?id=19361)
 
 There are also numerous reports for GCC (in progress), Firefox (libxul.so) and
 other heavyweight stuff (nautilus, Unity apps, etc.).
