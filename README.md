@@ -34,7 +34,7 @@ There are also numerous reports for GCC (in progress), Firefox (libxul.so) and
 other heavyweight stuff (nautilus, Unity apps, etc.).
 
 I haven't seen a noticeable slowdown when working in checked Ubuntu
-although CPU-intensive tests (e.g. building a C++ project) seem to have a ~15% slowdown.
+or building C++ projects.
 
 # Usage
 
