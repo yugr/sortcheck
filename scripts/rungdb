@@ -6,6 +6,7 @@ gdb \
   -ex "set environment LD_PRELOAD $(dirname $0)/../bin/libsortcheck.so" \
   -ex 'set pagination off' \
   -ex 'break report_error' \
+  -ex 'set print pretty on' \
   -ex run \
   --args "$@"
 
