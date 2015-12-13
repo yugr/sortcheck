@@ -44,6 +44,9 @@ Run your app with preloaded libsortcheck.so:
  $ LD_PRELOAD=libsortcheck.so myapp ...
 ```
 
+(you'll probably want to combine this with some kind of regression
+or random/fuzz testing to achieve good coverage).
+
 You can customize behavior through SORTCHECK\_OPTIONS environment
 variable - a comma-separated list of option assignments e.g.
 
