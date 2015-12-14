@@ -34,7 +34,7 @@ There are also numerous reports for GCC (in progress), Firefox (libxul.so) and
 other heavyweight stuff (nautilus, Unity apps, etc.).
 
 I haven't seen a noticeable slowdown when working in checked Ubuntu
-or building C++ projects.
+or building C++ projects with a checked compiler.
 
 # Usage
 
