@@ -31,7 +31,7 @@ static int num_errors = 0;
 static long proc_pid = -1;
 static int do_report_error = 1;
 
-static void fini() {
+static void fini(void) {
   if(maps)
     free(maps);
   if(proc_cmdline)
@@ -40,7 +40,7 @@ static void fini() {
     free(proc_name);
 }
 
-static void init() {
+static void init(void) {
   const char *opts;
   if((opts = getenv("SORTCHECK_OPTIONS"))) {
     char *opts_ = strdup(opts);
