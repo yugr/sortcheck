@@ -1,3 +1,19 @@
 #!/bin/sh -e
 
-LD_PRELOAD=$(dirname $0)/../bin/libsortcheck.so "$@"
+if test $# = 0; then
+  cat <<EOF
+$(basename $0) [OPTS] "CMDS"
+Simple script for running CMDS under SortChecker (with options OPTS).
+
+Example:
+  $ sortcheck/scripts/sortcheck print_to_syslog=1 'make clean && make -j2'
+EOF
+  exit
+fi
+
+if ! test -x "$1" && echo "$1" | grep -q =; then
+  export SORTCHECK_OPTIONS="$1"
+  shift
+fi
+
+bash -c "export LD_PRELOAD=$(dirname $0)/../bin/libsortcheck.so; $@"

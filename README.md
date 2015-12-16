@@ -38,14 +38,21 @@ or building C++ projects with a checked compiler.
 
 # Usage
 
-Run your app with preloaded libsortcheck.so:
+You do not need to rebuild your app to test it under SortChecker.
+Just run with preloaded libsortcheck.so:
 
 ```
- $ LD_PRELOAD=libsortcheck.so myapp ...
+$ LD_PRELOAD=libsortcheck.so myapp ...
 ```
 
 (you'll probably want to combine this with some kind of regression
 or random/fuzz testing to achieve good coverage).
+
+You could also use a helper script sortcheck to do this for you:
+
+```
+$ sortcheck myapp ...
+```
 
 You can customize behavior through SORTCHECK\_OPTIONS environment
 variable - a comma-separated list of option assignments e.g.
