@@ -15,11 +15,23 @@
 
 #define EXPORT __attribute__((visibility("default")))
 
+enum CheckFlags {
+  CHECK_BASIC        = 1 << 0,
+  CHECK_REFLEXIVITY  = 1 << 1,
+  CHECK_SYMMETRY     = 1 << 2,
+  CHECK_TRANSITIVITY = 1 << 3,
+  CHECK_SORTED       = 1 << 4,
+  CHECK_GOOD_BSEARCH = 1 << 5,
+  CHECK_DEFAULT      = CHECK_BASIC | CHECK_REFLEXIVITY
+                       | CHECK_SYMMETRY | CHECK_TRANSITIVITY
+		       | CHECK_SORTED,
+};
+
 // Runtime options
 static int debug = 0;
 static int max_errors = 10;
-static int good_bsearch = 0;
 static int print_to_syslog = 0;
+static unsigned check_flags = CHECK_DEFAULT;
 
 // Other pieces of state
 static int init_done = 0;
@@ -74,8 +86,35 @@ static void init(void) {
         do_report_error = atoi(value);
       } else if(0 == strcmp(name, "max_errors")) {
         max_errors = atoi(value);
-      } else if(0 == strcmp(name, "good_bsearch")) {
-        good_bsearch = atoi(value);
+      } else if(0 == strcmp(name, "check")) {
+	unsigned flags = 0;
+	do {
+          char *next = strchr(value, ',');
+	  if(next) {
+	    *next = 0;
+	    ++next;
+	  }
+	  if(0 == strcmp("basic", value)) {
+	    flags |= CHECK_BASIC;
+	  } else if(0 == strcmp("reflexivity", value)) {
+	    flags |= CHECK_REFLEXIVITY;
+	  } else if(0 == strcmp("symmetry", value)) {
+	    flags |= CHECK_SYMMETRY;
+	  } else if(0 == strcmp("transitivity", value)) {
+	    flags |= CHECK_SYMMETRY;
+	  } else if(0 == strcmp("sort", value)) {
+	    flags |= CHECK_SORTED;
+	  } else if(0 == strcmp("good_bsearch", value)) {
+            flags |= CHECK_GOOD_BSEARCH;
+	  } else if(0 == strcmp("default", value)) {
+            flags |= CHECK_DEFAULT;
+	  } else {
+	    fprintf(stderr, "sortcheck: unknown check '%s'\n", value);
+	    exit(1);
+	  }
+	  value = next;
+	} while(value);
+	check_flags = flags;
       } else {
         fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
         exit(1);
@@ -170,6 +209,9 @@ static inline int sign(int x) {
 
 // Check that comparator is stable and does not modify arguments
 static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+  if(!(check_flags & CHECK_BASIC))
+    return;
+
   const char *some = key ? key : data;
   size_t i;
 
@@ -182,7 +224,7 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
       report_error(ctx, "comparison function modifies data");
       break;
     }
-    if(!key || good_bsearch) {
+    if(!key || (check_flags & CHECK_GOOD_BSEARCH)) {
       cmp(elt, elt);
       if(cs != checksum(elt, sz)) {
         report_error(ctx, "comparison function modifies data");
@@ -199,26 +241,36 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
       break;
     }
   }
+}
 
-  if(!key || good_bsearch) {
-    // Check that equality is respected
-    for(i = 0; i < n; ++i) {
-      const void *elt = (const char *)data + i * sz;
-      // TODO: it may make sense to compare different but equal elements?
-      if(0 != cmp(elt, elt)) {
-        report_error(ctx, "comparison function returns non-zero for equal elements");
-        break;
-      }
+// Check that comparator is reflexive i.e. respects self-application
+static void check_reflex(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+  if(!(check_flags & CHECK_REFLEXIVITY))
+    return;
+
+  // Can check only good bsearch callbacks
+  if(key && !(check_flags & CHECK_GOOD_BSEARCH))
+    return;
+
+  size_t i;
+  for(i = 0; i < n; ++i) {
+    const void *elt = (const char *)data + i * sz;
+    // TODO: it may make sense to compare different but equal elements?
+    if(0 != cmp(elt, elt)) {
+      report_error(ctx, "comparison function returns non-zero for equal elements");
+      break;
     }
   }
 }
 
 // Check that array is sorted
 static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
-  size_t i;
+  if(!(check_flags & CHECK_SORTED))
+    return;
 
   if(key) {
     int order = 1;
+    size_t i;
     for(i = 0; i < n; ++i) {
       const void *elt = (const char *)data + i * sz;
       int new_order = sign(cmp(key, elt));
@@ -230,7 +282,8 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
     }
   }
 
-  if(!key || good_bsearch) {
+  if(!key || (check_flags & CHECK_GOOD_BSEARCH)) {
+    size_t i;
     for(i = 1; i < n; ++i) {
       const void *elt = (const char *)data + i * sz;
       const void *prev = (const char *)elt - sz;
@@ -244,10 +297,9 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
 
 // Check that ordering is total
 static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
-  if(key && !good_bsearch)
+  // Can check only good bsearch callbacks
+  if(key && !(check_flags & CHECK_GOOD_BSEARCH))
     return;
-
-  key = key;  // TODO: check key as well
 
   // TODO: 2 bits enough for status
   int8_t cmp_[32][32];
@@ -266,27 +318,35 @@ static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
 
   // Totality by construction
 
-  // Irreflexivity + Asymmetricity
-  for(i = 0; i < n; ++i)
-  for(j = 0; j < n; ++j) {
-    if(cmp_[i][j] != -cmp_[j][i]) {
-      report_error(ctx, "comparison function is not symmetric");
-      goto sym_check_done;
+  // Irreflexivity + Asymmetry
+  if(check_flags & CHECK_TRANSITIVITY) {
+    for(i = 0; i < n; ++i)
+    for(j = 0; j < n; ++j) {
+      if(!(check_flags & CHECK_REFLEXIVITY) && i == j)
+	continue;
+
+      if(cmp_[i][j] != -cmp_[j][i]) {
+        report_error(ctx, "comparison function is not symmetric");
+        goto sym_check_done;
+      }
     }
   }
 sym_check_done:
 
   // Transitivity
-  // FIXME: slow slow...
-  for(i = 0; i < n; ++i)
-  for(j = 0; j < n; ++j)
-  for(k = 0; k < n; ++k) {
-    if(cmp_[i][j] == cmp_[j][k] && cmp_[i][j] != cmp_[i][k]) {
-      report_error(ctx, "comparison function is not transitive");
-      goto trans_check_done;
+  if(check_flags & CHECK_TRANSITIVITY) {
+    // FIXME: slow slow...
+    for(i = 0; i < n; ++i)
+    for(j = 0; j < n; ++j)
+    for(k = 0; k < n; ++k) {
+      if(cmp_[i][j] == cmp_[j][k] && cmp_[i][j] != cmp_[i][k]) {
+        report_error(ctx, "comparison function is not transitive");
+        goto trans_check_done;
+      }
     }
   }
 trans_check_done:
+
   return;
 }
 
@@ -308,7 +368,8 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
   if(num_errors < max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, n, sz);
-    check_total(&ctx, cmp, 0, data, n, sz);  // manpage does not require this but still
+    check_reflex(&ctx, cmp, key, data, n, sz);
+    check_total(&ctx, cmp, key, data, n, sz);  // manpage does not require this but still
     check_sorted(&ctx, cmp, key, data, n, sz);
   }
   return _real(key, data, n, sz, cmp);
@@ -320,6 +381,7 @@ EXPORT void qsort(void *data, size_t n, size_t sz, int (*cmp)(const void *, cons
   if(num_errors < max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, 0, data, n, sz);
+    check_reflex(&ctx, cmp, 0, data, n, sz);
     check_total(&ctx, cmp, 0, data, n, sz);
   }
   _real(data, n, sz, cmp);

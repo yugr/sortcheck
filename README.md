@@ -68,10 +68,18 @@ Supported options are
 (default false)
 * do\_report\_error - print reports (only used for benchmarking,
 default true)
-* good\_bsearch - some programs (e.g. GCC) use restricted form of
-bsearch which does not support all kinds of checks that SortChecker
-has so for safety we have to disable some agressive checks by default;
-setting this option to 1 enables these checks
+* check\_flags - comma-separated list of checks to perform
+(default is to enable all safe checks); available options are
+  * basic - check that comparison functions return stable results
+  and does not modify inputs)
+  * reflexivity - check that cmp(x,x) == 0
+  * symmetry - check that cmp(x,y) == cmp(y,x)
+  * transitivity - check that if x < y && y < z, then x < z
+  * sorted - check that arrays passed to bsearch are sorted
+  * good\_bsearch - some programs (e.g. GCC) use restricted form of
+  bsearch which does not support all kinds of checks that SortChecker
+  has so for safety we have to disable some agressive checks by default;
+  this flags turns such checks on.
 
 # Applying to full distribution
 
@@ -123,4 +131,5 @@ Here's the high-level stuff, sorted by priority:
 * more intelligent error suppression
 * provide flag(s) to tune aggressiveness of the checker (e.g. how many elements to consider, etc.)
 * filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
+* check other popular sorters (g\_qsort\_with\_data, lsearch/lfind, tsearch/tfind)
 
