@@ -16,4 +16,6 @@ if ! test -x "$1" && echo "$1" | grep -q =; then
   shift
 fi
 
-bash -c "export LD_PRELOAD=$(dirname $0)/../bin/libsortcheck.so; $@"
+CMD="$@"
+
+bash -c "export LD_PRELOAD=$(dirname $0)/../bin/libsortcheck.so; $CMD"

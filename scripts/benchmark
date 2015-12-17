@@ -12,14 +12,15 @@ EOF
 fi
 
 ROOT=$(dirname $0)/..
+CMD="$@"
 
 echo 'Normal runs'
-time /bin/bash -c "$@" > /dev/null
-time /bin/bash -c "$@" > /dev/null
-time /bin/bash -c "$@" > /dev/null
+time /bin/bash -c "$CMD" > /dev/null
+time /bin/bash -c "$CMD" > /dev/null
+time /bin/bash -c "$CMD" > /dev/null
 
 echo 'Checked runs'
-e="export LD_PRELOAD=$ROOT/bin/libsortcheck.so; export SORTCHECK_OPTIONS=print_to_syslog=1;"
-time /bin/bash -c "$e $@" > /dev/null
-time /bin/bash -c "$e $@" > /dev/null
-time /bin/bash -c "$e $@" > /dev/null
+ENV="export LD_PRELOAD=$ROOT/bin/libsortcheck.so; export SORTCHECK_OPTIONS=print_to_syslog=1;"
+time /bin/bash -c "$ENV $CMD" > /dev/null
+time /bin/bash -c "$ENV $CMD" > /dev/null
+time /bin/bash -c "$ENV $CMD" > /dev/null
