@@ -225,7 +225,9 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
       report_error(ctx, "comparison function modifies data");
       break;
     }
-    if(!key || (check_flags & CHECK_GOOD_BSEARCH)) {
+
+    if((check_flags & CHECK_REFLEXIVITY)
+       && (!key || (check_flags & CHECK_GOOD_BSEARCH))) {
       cmp(elt, elt);
       if(cs != checksum(elt, sz)) {
         report_error(ctx, "comparison function modifies data");
@@ -240,6 +242,14 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
     if(cmp(some, elt) != cmp(some, elt)) {
       report_error(ctx, "comparison function returns unstable results");
       break;
+    }
+
+    if((check_flags & CHECK_REFLEXIVITY)
+       && (!key || (check_flags & CHECK_GOOD_BSEARCH))) {
+      if(cmp(elt, elt) != cmp(elt, elt)) {
+        report_error(ctx, "comparison function returns unstable results");
+        break;
+      }
     }
   }
 }
