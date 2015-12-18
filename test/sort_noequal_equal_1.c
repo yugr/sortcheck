@@ -2,7 +2,7 @@
 
 char aa[] = { 1 };
 
-// CHECK: comparison function returns non-zero for equal elements
+// CHECK-NOT: comparison function is not reflexive
 int cmp(const void *pa, const void *pb) {
   char a = *(const char *)pa;
   char b = *(const char *)pb;

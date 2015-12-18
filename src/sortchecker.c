@@ -213,10 +213,11 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
     return;
 
   const char *some = key ? key : data;
+  size_t i0 = key ? 0 : 1;  // Avoid self-comparison
   size_t i;
 
   // Check for modifying comparison functions
-  for(i = 0; i < n; ++i) {
+  for(i = i0; i < n; ++i) {
     const void *elt = (const char *)data + i * sz;
     unsigned cs = checksum(elt, sz);
     cmp(some, elt);
@@ -234,30 +235,10 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
   }
 
   // Check for non-constant return value
-  for(i = 0; i < n; ++i) {
+  for(i = i0; i < n; ++i) {
     const void *elt = (const char *)data + i * sz;
     if(cmp(some, elt) != cmp(some, elt)) {
       report_error(ctx, "comparison function returns unstable results");
-      break;
-    }
-  }
-}
-
-// Check that comparator is reflexive i.e. respects self-application
-static void check_reflex(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
-  if(!(check_flags & CHECK_REFLEXIVITY))
-    return;
-
-  // Can check only good bsearch callbacks
-  if(key && !(check_flags & CHECK_GOOD_BSEARCH))
-    return;
-
-  size_t i;
-  for(i = 0; i < n; ++i) {
-    const void *elt = (const char *)data + i * sz;
-    // TODO: it may make sense to compare different but equal elements?
-    if(0 != cmp(elt, elt)) {
-      report_error(ctx, "comparison function returns non-zero for equal elements");
       break;
     }
   }
@@ -296,7 +277,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
 }
 
 // Check that ordering is total
-static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
   // Can check only good bsearch callbacks
   if(key && !(check_flags & CHECK_GOOD_BSEARCH))
     return;
@@ -311,6 +292,12 @@ static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
   for(j = 0; j < n; ++j) {
     const void *a = (const char *)data + i * sz;
     const void *b = (const char *)data + j * sz;
+    if(i == j && !(check_flags & CHECK_REFLEXIVITY)) {
+      // Do not call cmp(x,x) unless explicitly asked by user
+      // because some projects assert on self-comparisons (e.g. GCC)
+      cmp_[i][j] = 0;
+      continue;
+    }
     cmp_[i][j] = sign(cmp(a, b));
   }
 
@@ -318,13 +305,19 @@ static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
 
   // Totality by construction
 
-  // Irreflexivity + Asymmetry
-  if(check_flags & CHECK_TRANSITIVITY) {
-    for(i = 0; i < n; ++i)
-    for(j = 0; j < n; ++j) {
-      if(!(check_flags & CHECK_REFLEXIVITY) && i == j)
-	continue;
+  if(check_flags & CHECK_REFLEXIVITY) {
+    for(i = 0; i < n; ++i) {
+      // TODO: it may make sense to compare different but equal elements?
+      if(0 != cmp_[i][i]) {
+        report_error(ctx, "comparison function is not reflexive (returns non-zero for equal elements)");
+        break;
+      }
+    }
+  }
 
+  if(check_flags & CHECK_SYMMETRY) {
+    for(i = 0; i < n; ++i)
+    for(j = 0; j < i; ++j) {
       if(cmp_[i][j] != -cmp_[j][i]) {
         report_error(ctx, "comparison function is not symmetric");
         goto sym_check_done;
@@ -333,11 +326,10 @@ static void check_total(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
   }
 sym_check_done:
 
-  // Transitivity
   if(check_flags & CHECK_TRANSITIVITY) {
     // FIXME: slow slow...
     for(i = 0; i < n; ++i)
-    for(j = 0; j < n; ++j)
+    for(j = 0; j < i; ++j)
     for(k = 0; k < n; ++k) {
       if(cmp_[i][j] == cmp_[j][k] && cmp_[i][j] != cmp_[i][k]) {
         report_error(ctx, "comparison function is not transitive");
@@ -368,8 +360,7 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
   if(num_errors < max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, n, sz);
-    check_reflex(&ctx, cmp, key, data, n, sz);
-    check_total(&ctx, cmp, key, data, n, sz);  // manpage does not require this but still
+    check_total_order(&ctx, cmp, key, data, n, sz);  // manpage does not require this but still
     check_sorted(&ctx, cmp, key, data, n, sz);
   }
   return _real(key, data, n, sz, cmp);
@@ -381,8 +372,7 @@ EXPORT void qsort(void *data, size_t n, size_t sz, int (*cmp)(const void *, cons
   if(num_errors < max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, 0, data, n, sz);
-    check_reflex(&ctx, cmp, 0, data, n, sz);
-    check_total(&ctx, cmp, 0, data, n, sz);
+    check_total_order(&ctx, cmp, 0, data, n, sz);
   }
   _real(data, n, sz, cmp);
 }
