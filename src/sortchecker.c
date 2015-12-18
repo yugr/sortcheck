@@ -22,9 +22,9 @@ enum CheckFlags {
   CHECK_TRANSITIVITY = 1 << 3,
   CHECK_SORTED       = 1 << 4,
   CHECK_GOOD_BSEARCH = 1 << 5,
-  CHECK_DEFAULT      = CHECK_BASIC | CHECK_REFLEXIVITY
-                       | CHECK_SYMMETRY | CHECK_TRANSITIVITY
-		       | CHECK_SORTED,
+  CHECK_DEFAULT      = CHECK_BASIC | CHECK_SYMMETRY
+                       | CHECK_TRANSITIVITY | CHECK_SORTED,
+  CHECK_ALL          = 0xffffffff,
 };
 
 // Runtime options

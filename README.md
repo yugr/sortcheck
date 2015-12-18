@@ -68,18 +68,23 @@ Supported options are
 (default false)
 * do\_report\_error - print reports (only used for benchmarking,
 default true)
-* check\_flags - comma-separated list of checks to perform
-(default is to enable all safe checks); available options are
+* check\_flags - comma-separated list of checks to perform;
+available options are
   * basic - check that comparison functions return stable results
-  and does not modify inputs)
-  * reflexivity - check that cmp(x,x) == 0
-  * symmetry - check that cmp(x,y) == cmp(y,x)
+  and does not modify inputs (enabled by default)
+  * reflexivity - check that cmp(x,x) == 0 (not very important so
+  disabled by default)
+  * symmetry - check that cmp(x,y) == cmp(y,x) (enabled by default)
   * transitivity - check that if x < y && y < z, then x < z
-  * sorted - check that arrays passed to bsearch are sorted
-  * good\_bsearch - some programs (e.g. GCC) use restricted form of
-  bsearch which does not support all kinds of checks that SortChecker
-  has so for safety we have to disable some agressive checks by default;
-  this flags turns such checks on.
+  (enabled by default)
+  * sorted - check that arrays passed to bsearch are sorted (enabled
+  by default)
+  * good\_bsearch - bsearch uses a restricted (non-symmetric) form
+  of comparison function so some checks are not generally applicable;
+  this option tells SortChecker that it should test bsearch more
+  aggressively (unsafe so disabled by default). Note that this
+  option may cause runtime errors or crashes if applied
+  inappropriately),
 
 # Applying to full distribution
 
