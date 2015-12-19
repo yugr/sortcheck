@@ -389,7 +389,29 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
   return _real(key, data, n, sz, cmp);
 }
 
-EXPORT void qsort(void *data, size_t n, size_t sz, int (*cmp)(const void *, const void *)) {
+EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
+  MAYBE_INIT;
+  GET_REAL(lfind);
+  if(num_errors < max_errors) {
+    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+    check_basic(&ctx, cmp, key, data, *n, sz);
+    check_total_order(&ctx, cmp, key, data, *n, sz);
+  }
+  _real(key, data, n, sz, cmp);
+}
+
+EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
+  MAYBE_INIT;
+  GET_REAL(lsearch);
+  if(num_errors < max_errors) {
+    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+    check_basic(&ctx, cmp, key, data, *n, sz);
+    check_total_order(&ctx, cmp, key, data, *n, sz);
+  }
+  _real(key, data, n, sz, cmp);
+}
+
+EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(qsort);
   if(num_errors < max_errors) {

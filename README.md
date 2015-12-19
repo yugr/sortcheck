@@ -2,7 +2,7 @@
 
 SortChecker is a proof-of-concept tool to detect violations
 of ordering axioms in comparison functions passed to qsort
-or bsearch routines. For complex data structures it's very
+(also bsearch, lfind, etc.). For complex data structures it's very
 easy to violate one of the requirements. Such violations cause
 undefined behavior and may lead to all sorts of runtime
 errors in practice.
