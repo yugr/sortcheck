@@ -10,7 +10,8 @@ int cmp(const void *pa, const void *pb) {
   // CHECK: comparison function modifies data
   int res = a == b ? 1 : 0;
   // CHECK-NOT: comparison function is not symmetric
-  *(char *)pa = 100;
+  *(char *)pa = *(char *)pb = 100;
+  return res;
 }
 
 int main() {

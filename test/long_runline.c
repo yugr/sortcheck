@@ -7,7 +7,7 @@ char aa[] = { 1, 2, 3 };
 int cmp(const void *pa, const void *pb) {
   char a = *(const char *)pa;
   char b = *(const char *)pb;
-  *(char *)pa = 100;
+  *(char *)pa = *(char *)pb = 100;
   return 0;
 }
 
