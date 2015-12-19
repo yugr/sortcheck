@@ -127,17 +127,15 @@ addresses from dynamically loaded libs to not be pretty-printed.
 
 Various TODOs are scattered all over the codebase.
 Here's the high-level stuff, sorted by priority:
-* (!!) fix and report errors in GCC
+* (!!) ensure that code is thread-safe
 * (!!) intercept dlopen/dlclose to be able to pretty-print addresses in plugins
 * (!!) use it to debug remaining errors in Ubuntu
-* (!!) verify that Ubuntu is stable under libsortcheck
-* (!) do not report repetative errors for some comparison function
+* (!!) verify that Ubuntu is 100% stable under libsortcheck
 * (!) print complete backtrace rather than just address of caller (libunwind?)
-* write code comments
-* ensure that code is thread-safe
+* (!) do not report repetative errors for some comparison function
+* disable reporting based on process name
 * print array elements which triggered errors (i.e. hex dumps)
-* more intelligent error suppression
 * provide flag(s) to tune aggressiveness of the checker (e.g. how many elements to consider, etc.)
-* filter out trivial stuff (strcmp, short sizes are likely to be ints, etc.)
-* check other popular sorters (g\_qsort\_with\_data, lsearch/lfind, tsearch/tfind)
+* check other popular sorters (g\_qsort\_with\_data)
+* resolve problems with AppArmor/SEL
 
