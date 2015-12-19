@@ -218,24 +218,31 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
   if(!(check_flags & CHECK_BASIC))
     return;
 
-  const char *some = key ? key : data;
+  const char *test_val = key ? key : data;
   size_t i0 = key ? 0 : 1;  // Avoid self-comparison
   size_t i;
 
+  unsigned cs_test_val = key ? 0 : checksum(test_val, sz);
+
   // Check for modifying comparison functions
   for(i = i0; i < n; ++i) {
-    const void *elt = (const char *)data + i * sz;
-    unsigned cs = checksum(elt, sz);
-    cmp(some, elt);
-    if(cs != checksum(elt, sz)) {
+    const void *val = (const char *)data + i * sz;
+    unsigned cs = checksum(val, sz);
+    cmp(test_val, val);
+    if(cs != checksum(val, sz)) {
+      report_error(ctx, "comparison function modifies data");
+      break;
+    }
+
+    if(!key && cs_test_val != checksum(test_val, sz)) {
       report_error(ctx, "comparison function modifies data");
       break;
     }
 
     if((check_flags & CHECK_REFLEXIVITY)
        && (!key || (check_flags & CHECK_GOOD_BSEARCH))) {
-      cmp(elt, elt);
-      if(cs != checksum(elt, sz)) {
+      cmp(val, val);
+      if(cs != checksum(val, sz)) {
         report_error(ctx, "comparison function modifies data");
         break;
       }
@@ -244,15 +251,15 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
 
   // Check for non-constant return value
   for(i = i0; i < n; ++i) {
-    const void *elt = (const char *)data + i * sz;
-    if(cmp(some, elt) != cmp(some, elt)) {
+    const void *val = (const char *)data + i * sz;
+    if(cmp(test_val, val) != cmp(test_val, val)) {
       report_error(ctx, "comparison function returns unstable results");
       break;
     }
 
     if((check_flags & CHECK_REFLEXIVITY)
        && (!key || (check_flags & CHECK_GOOD_BSEARCH))) {
-      if(cmp(elt, elt) != cmp(elt, elt)) {
+      if(cmp(val, val) != cmp(val, val)) {
         report_error(ctx, "comparison function returns unstable results");
         break;
       }
@@ -269,8 +276,8 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
     int order = 1;
     size_t i;
     for(i = 0; i < n; ++i) {
-      const void *elt = (const char *)data + i * sz;
-      int new_order = sign(cmp(key, elt));
+      const void *val = (const char *)data + i * sz;
+      int new_order = sign(cmp(key, val));
       if(new_order > order) {
         report_error(ctx, "processed array is not sorted at index %zd", i);
         return;  // Return to stop further error reporting
@@ -282,9 +289,9 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
   if(!key || (check_flags & CHECK_GOOD_BSEARCH)) {
     size_t i;
     for(i = 1; i < n; ++i) {
-      const void *elt = (const char *)data + i * sz;
-      const void *prev = (const char *)elt - sz;
-      if(cmp(prev, elt) > 0) {
+      const void *val = (const char *)data + i * sz;
+      const void *prev = (const char *)val - sz;
+      if(cmp(prev, val) > 0) {
         report_error(ctx, "processed array is not sorted at index %zd", i);
         break;
       }
