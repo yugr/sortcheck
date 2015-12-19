@@ -86,13 +86,13 @@ static void init(void) {
       } else if(0 == strcmp(name, "max_errors")) {
         max_errors = atoi(value);
       } else if(0 == strcmp(name, "check")) {
-	unsigned flags = 0;
-	do {
+        unsigned flags = 0;
+        do {
           char *next = strchr(value, ',');
-	  if(next) {
-	    *next = 0;
-	    ++next;
-	  }
+          if(next) {
+            *next = 0;
+            ++next;
+          }
 
           int no = 0;
           if(0 == strncmp(value, "no_", 3)) {
@@ -111,12 +111,12 @@ static void init(void) {
           PARSE_CHECK(CHECK_GOOD_BSEARCH, "good_bsearch")
           PARSE_CHECK(CHECK_DEFAULT, "default")
           PARSE_CHECK(CHECK_ALL, "all")
-	  {
-	    fprintf(stderr, "sortcheck: unknown check '%s'\n", value);
-	    exit(1);
-	  }
-	  value = next;
-	} while(value);
+          {
+            fprintf(stderr, "sortcheck: unknown check '%s'\n", value);
+            exit(1);
+          }
+          value = next;
+        } while(value);
         check_flags = flags;
       } else {
         fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
