@@ -81,7 +81,6 @@ static void init(void) {
         debug = atoi(value);
       } else if(0 == strcmp(name, "print_to_syslog")) {
         print_to_syslog = atoi(value);;
-        openlog("", 0, LOG_USER);
       } else if(0 == strcmp(name, "report_error")) {
         do_report_error = atoi(value);
       } else if(0 == strcmp(name, "max_errors")) {
@@ -94,27 +93,31 @@ static void init(void) {
 	    *next = 0;
 	    ++next;
 	  }
-	  if(0 == strcmp("basic", value)) {
-	    flags |= CHECK_BASIC;
-	  } else if(0 == strcmp("reflexivity", value)) {
-	    flags |= CHECK_REFLEXIVITY;
-	  } else if(0 == strcmp("symmetry", value)) {
-	    flags |= CHECK_SYMMETRY;
-	  } else if(0 == strcmp("transitivity", value)) {
-	    flags |= CHECK_SYMMETRY;
-	  } else if(0 == strcmp("sort", value)) {
-	    flags |= CHECK_SORTED;
-	  } else if(0 == strcmp("good_bsearch", value)) {
-            flags |= CHECK_GOOD_BSEARCH;
-	  } else if(0 == strcmp("default", value)) {
-            flags |= CHECK_DEFAULT;
-	  } else {
+
+          int no = 0;
+          if(0 == strncmp(value, "no_", 3)) {
+            no = 1;
+            value += 3;
+          }
+
+#define PARSE_CHECK(m, s) if(0 == strcmp(s, value)) { \
+  if(no) flags &= ~m; else flags |= m; \
+} else
+          PARSE_CHECK(CHECK_BASIC, "basic")
+          PARSE_CHECK(CHECK_REFLEXIVITY, "reflexivity")
+          PARSE_CHECK(CHECK_SYMMETRY, "symmetry")
+          PARSE_CHECK(CHECK_TRANSITIVITY, "transitivity")
+          PARSE_CHECK(CHECK_SORTED, "sorted")
+          PARSE_CHECK(CHECK_GOOD_BSEARCH, "good_bsearch")
+          PARSE_CHECK(CHECK_DEFAULT, "default")
+          PARSE_CHECK(CHECK_ALL, "all")
+	  {
 	    fprintf(stderr, "sortcheck: unknown check '%s'\n", value);
 	    exit(1);
 	  }
 	  value = next;
 	} while(value);
-	check_flags = flags;
+        check_flags = flags;
       } else {
         fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
         exit(1);
@@ -122,6 +125,9 @@ static void init(void) {
     }
     free(opts_);
   }
+
+  if(print_to_syslog)
+    openlog("", 0, LOG_USER);
 
   // Get mappings
   maps = get_proc_maps(&nmaps);

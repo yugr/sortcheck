@@ -69,7 +69,7 @@ Supported options are
 (default false)
 * do\_report\_error - print reports (only used for benchmarking,
 default true)
-* check\_flags - comma-separated list of checks to perform;
+* check - comma-separated list of checks to perform;
 available options are
   * basic - check that comparison functions return stable results
   and does not modify inputs (enabled by default)
@@ -86,6 +86,8 @@ available options are
   aggressively (unsafe so disabled by default). Note that this
   option may cause runtime errors or crashes if applied
   inappropriately),
+  * for each option XYZ there's a dual no\_XYZ (which disables
+  corresponding check)
 
 # Applying to full distribution
 
