@@ -5,7 +5,7 @@ of ordering axioms in comparison functions passed to qsort
 (also bsearch, lfind, etc.). For complex data structures it's very
 easy to violate one of the requirements. Such violations cause
 undefined behavior and may lead to all sorts of runtime
-errors in practice.
+errors in practice (including [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)).
 
 The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
