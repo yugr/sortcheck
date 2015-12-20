@@ -34,7 +34,7 @@ static int print_to_syslog = 0;
 static unsigned check_flags = CHECK_DEFAULT;
 
 // Other pieces of state
-static int init_done = 0;
+static volatile int init_in_progress = 0, init_done = 0;
 static ProcMap *maps = 0;
 static char *proc_name = 0;
 static char *proc_cmdline = 0;
@@ -53,6 +53,19 @@ static void fini(void) {
 }
 
 static void init(void) {
+  if(init_done)
+    return;
+
+  // TODO: proper atomics here
+  if(init_in_progress) {
+    while(!init_done)
+      asm("");
+    return;
+  }
+
+  init_in_progress = 1;
+  asm("");
+
   const char *opts;
   if((opts = getenv("SORTCHECK_OPTIONS"))) {
     char *opts_ = strdup(opts);
@@ -144,7 +157,10 @@ static void init(void) {
 
   atexit(fini);
 
+  // TODO: proper atomics here
+  asm("");
   init_done = 1;
+  init_in_progress = 0;
 }
 
 typedef struct {

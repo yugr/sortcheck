@@ -45,6 +45,8 @@ ProcMap *get_proc_maps(size_t *n) {
     // address           perms offset  dev   inode       pathname
     // 00400000-00452000 r-xp 00000000 08:02 173521      /usr/bin/dbus-daemon
 
+    // TODO: Basil wants scanf here...
+
     const char *begin_addr = buf;
     char *dash = strchr(buf, '-');
     if(!dash)
