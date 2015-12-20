@@ -30,8 +30,8 @@ enum CheckFlags {
 // Runtime options
 static int debug = 0;
 static int max_errors = 10;
-static int print_to_syslog = 0;
 static unsigned check_flags = CHECK_DEFAULT;
+static FILE *out;
 
 // Other pieces of state
 static volatile int init_in_progress = 0, init_done = 0;
@@ -66,6 +66,9 @@ static void init(void) {
   init_in_progress = 1;
   asm("");
 
+  const char *out_filename = 0;
+  int print_to_syslog = 0;
+
   const char *opts;
   if((opts = getenv("SORTCHECK_OPTIONS"))) {
     char *opts_ = strdup(opts);
@@ -93,7 +96,9 @@ static void init(void) {
       if(0 == strcmp(name, "debug")) {
         debug = atoi(value);
       } else if(0 == strcmp(name, "print_to_syslog")) {
-        print_to_syslog = atoi(value);;
+        print_to_syslog = atoi(value);
+      } else if(0 == strcmp(name, "print_to_file")) {
+        out_filename = value;
       } else if(0 == strcmp(name, "report_error")) {
         do_report_error = atoi(value);
       } else if(0 == strcmp(name, "max_errors")) {
@@ -139,16 +144,26 @@ static void init(void) {
     free(opts_);
   }
 
-  if(print_to_syslog)
+  if(print_to_syslog && out_filename) {
+    fprintf(stderr, "sortcheck: both print_to_syslog and print_to_file were specified\n");
+    exit(1);
+  } else if(print_to_syslog) {
     openlog("", 0, LOG_USER);
+  } else if(out_filename) {
+    if(!(out = fopen(out_filename, "ab"))) {
+      fprintf(stderr, "sortcheck: failed to open %s for writing\n", out_filename);
+      exit(1);
+    }
+  } else
+    out = stderr;
 
   // Get mappings
   maps = get_proc_maps(&nmaps);
   if(debug) {
-    fputs("Process map:\n", stderr);
+    fputs("Process map:\n", out);
     size_t i;
     for(i = 0; i < nmaps; ++i)
-      fprintf(stderr, "  %50s: %p-%p\n", &maps[i].name[0], maps[i].begin_addr, maps[i].end_addr);
+      fprintf(out, "  %50s: %p-%p\n", &maps[i].name[0], maps[i].begin_addr, maps[i].end_addr);
   }
 
   get_proc_cmdline(&proc_name, &proc_cmdline);
@@ -214,10 +229,11 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
     }
   }
 
-  if(print_to_syslog)
+  // TODO: factor out generic printing
+  if(!out)
     syslog(LOG_WARNING, "%s", full_msg);
   else
-    fputs(full_msg, stderr);
+    fputs(full_msg, out);
 
   if(full_msg != buf)
     free(full_msg);

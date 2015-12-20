@@ -65,6 +65,8 @@ $ export SORTCHECK_OPTIONS=debug=1:max_errors=10
 Supported options are
 * max\_errors - maximum number of errors to report (default 10)
 * debug - print debug info (default false)
+* print\_to\_file - print warnings to specified file (rather
+than default stderr)
 * print\_to\_syslog - print warnings to syslog instead of stderr
 (default false)
 * do\_report\_error - print reports (only used for benchmarking,
