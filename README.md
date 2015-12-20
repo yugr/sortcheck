@@ -56,7 +56,7 @@ $ sortcheck myapp ...
 ```
 
 You can customize behavior through SORTCHECK\_OPTIONS environment
-variable - a comma-separated list of option assignments e.g.
+variable - a colon-separated list of option assignments e.g.
 
 ```
 $ export SORTCHECK_OPTIONS=debug=1:max_errors=10
