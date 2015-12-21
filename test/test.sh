@@ -17,9 +17,6 @@ get_option() {
   cat $1 | sed -n 's!.*\/\/ *'$2' *: *!!p'
 }
 
-CHECK_PAT='// *CHECK *:'
-OPTS_PAT='// *OPTS *:'
-
 for t in test/*.c; do
   gcc $t -Itest -o bin/a.out
   if has_option $t OPTS; then
@@ -32,6 +29,9 @@ for t in test/*.c; do
   else
     ARGS=
   fi
+
+  cp /var/log/syslog bin/syslog.bak
+
   if ! LD_PRELOAD=bin/libsortcheck.so bin/a.out $ARGS 2>bin/a.out.log; then
     error "$t: test exited with a non-zero exit code"
   elif ! has_option $t CHECK && ! has_option $t CHECK-NOT && test -s bin/a.out.log; then
@@ -54,10 +54,28 @@ for t in test/*.c; do
         failed=1
       fi
     done < bin/checknots.txt
+  fi
 
-    if test -z "$failed"; then
-      echo "$t: OK"
-    fi
+  if has_option $t SYSLOG || has_option $t SYSLOG-NOT; then
+    get_option $t SYSLOG > bin/syslog_checks.txt
+    while read check; do
+      if ! comm -13 bin/syslog.bak /var/log/syslog | grep -q "$check"; then
+        error "$t: syslog does not match pattern '$check'"
+        failed=1
+      fi
+    done < bin/syslog_checks.txt
+
+    get_option $t SYSLOG-NOT > bin/syslog_checknots.txt
+    while read checknot; do
+      if comm -13 bin/syslog.bak /var/log/syslog | grep -q "$check"; then
+        error "$t: syslog matches prohibited pattern '$check'"
+        failed=1
+      fi
+    done < bin/syslog_checknots.txt
+  fi
+
+  if test -z "$failed"; then
+    echo "$t: OK"
   fi
 done
 
