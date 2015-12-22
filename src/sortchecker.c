@@ -70,8 +70,9 @@ static void init(void) {
   int print_to_syslog = 0;
 
   const char *opts;
+  char *opts_ = 0;
   if((opts = getenv("SORTCHECK_OPTIONS"))) {
-    char *opts_ = strdup(opts);
+    opts_ = strdup(opts);
 
     char *cur;
     for(cur = opts_; *cur; ) {
@@ -141,7 +142,6 @@ static void init(void) {
         exit(1);
       }
     }
-    free(opts_);
   }
 
   if(print_to_syslog && out_filename) {
@@ -171,6 +171,9 @@ static void init(void) {
   proc_pid = (long)getpid();
 
   atexit(fini);
+
+  if(opts_)
+    free(opts_);
 
   // TODO: proper atomics here
   asm("");
