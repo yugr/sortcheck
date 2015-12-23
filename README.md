@@ -1,11 +1,13 @@
 # What is this?
 
 SortChecker is a proof-of-concept tool to detect violations
-of ordering axioms in comparison functions passed to qsort
+of [ordering axioms](http://pubs.opengroup.org/onlinepubs/009695399/functions/qsort.html)
+in comparison functions passed to qsort
 (also bsearch, lfind, etc.). For complex data structures it's very
 easy to violate one of the requirements. Such violations cause
 undefined behavior and may lead to all sorts of runtime
-errors in practice (including [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)).
+errors in practice (including [unexpected results](https://groups.google.com/d/topic/golang-checkins/w4YWUgBhjJ0)
+or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)).
 
 The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
@@ -75,13 +77,14 @@ default true)
 available options are
   * basic - check that comparison functions return stable results
   and does not modify inputs (enabled by default)
-  * reflexivity - check that cmp(x,x) == 0 (not very important so
-  disabled by default)
+  * sorted - check that arrays passed to bsearch are sorted (enabled
+  by default)
   * symmetry - check that cmp(x,y) == cmp(y,x) (enabled by default)
   * transitivity - check that if x < y && y < z, then x < z
   (enabled by default)
-  * sorted - check that arrays passed to bsearch are sorted (enabled
-  by default)
+  * reflexivity - check that cmp(x,x) == 0 (usually not very important
+  so disabled by default, on the other hand may trigger on otherwise
+  undetected asymmetry bugs)
   * good\_bsearch - bsearch uses a restricted (non-symmetric) form
   of comparison function so some checks are not generally applicable;
   this option tells SortChecker that it should test bsearch more
