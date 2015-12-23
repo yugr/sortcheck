@@ -18,11 +18,16 @@ ifneq (,$(UBSAN))
 endif
 LIBS = -ldl
 
+DESTDIR = /usr
+
 OBJS = bin/sortchecker.o bin/proc_info.o bin/checksum.o bin/io.o
 
 $(shell mkdir -p bin)
 
 all: bin/libsortcheck.so
+
+install:
+	install -D bin/libsortcheck.so $(DESTDIR)/lib
 
 check:
 	test/test.sh
@@ -58,5 +63,5 @@ help:
 clean:
 	rm -f bin/*
 
-.PHONY: clean all check FORCE help
+.PHONY: clean all install check FORCE help
 
