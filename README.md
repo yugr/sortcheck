@@ -32,6 +32,7 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Cpio: HOL\_ENTRY\_PTRCMP triggers undefined behavior](http://savannah.gnu.org/bugs/index.php?46638)
 * [GDB: Invalid comparison functions](https://sourceware.org/bugzilla/show_bug.cgi?id=19361)
 * [GCC: reload\_pseudo\_compare\_func violates qsort requirements](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68988) (confirmed)
+* [GCC: libbacktrace: bsearch over unsorted array in unit\_addrs\_search](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69050) (intentional)
 * [dpkg: pkg\_sorter\_by\_listfile\_phys\_offs violates qsort requirements](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=808912) (fixed)
 
 There are also numerous reports for GCC (in progress), Firefox (libxul.so) and
