@@ -205,12 +205,26 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
     // Lazily compute modules (no race!)
 
     const ProcMap *map_for_cmp = find_proc_map_for_addr(maps, nmaps, ctx->cmp_addr);
-    ctx->cmp_module = map_for_cmp ? &map_for_cmp->name[0] : "<unknown>";
-    ctx->cmp_offset = map_for_cmp ? ((const char *)ctx->cmp_addr - (const char *)map_for_cmp->begin_addr) : 0;
+    if(map_for_cmp) {
+      ctx->cmp_module = &map_for_cmp->name[0];
+      ctx->cmp_offset = (size_t)ctx->cmp_addr;
+      if(strstr(ctx->cmp_module, ".so"))  // FIXME: how to detect PIE?
+        ctx->cmp_offset -= (size_t)map_for_cmp->begin_addr;
+    } else {
+      ctx->cmp_module = "<unknown>";
+      ctx->cmp_offset = 0;
+    }
 
     const ProcMap *map_for_caller = find_proc_map_for_addr(maps, nmaps, ctx->ret_addr);
-    ctx->caller_module = map_for_caller ? &map_for_caller->name[0] : "<unknown>";
-    ctx->caller_offset = map_for_caller ? ((const char *)ctx->ret_addr - (const char *)map_for_caller->begin_addr) : 0;
+    if(map_for_caller) {
+      ctx->caller_module = &map_for_caller->name[0];
+      ctx->caller_offset = (size_t)ctx->ret_addr;
+      if(strstr(ctx->caller_module, ".so"))  // FIXME: how to detect PIE?
+        ctx->caller_offset -= (size_t)map_for_caller->begin_addr;
+    } else {
+      ctx->caller_module = "<unknown>";
+      ctx->caller_offset = 0;
+    }
   }
 
   char body[128];
