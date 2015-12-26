@@ -3,7 +3,7 @@
 # Script to simplify debugging with SortChecker.
 
 gdb \
-  -ex "set environment LD_PRELOAD $(dirname $0)/../bin/libsortcheck.so" \
+  -ex "set environment LD_PRELOAD ${LD_PRELOAD:+$LD_PRELOAD:}$(dirname $0)/../bin/libsortcheck.so" \
   -ex 'set pagination off' \
   -ex 'break report_error' \
   -ex 'set print pretty on' \

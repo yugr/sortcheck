@@ -20,7 +20,7 @@ time /bin/bash -c "$CMD" > /dev/null
 time /bin/bash -c "$CMD" > /dev/null
 
 echo 'Checked runs'
-ENV="export LD_PRELOAD=$ROOT/bin/libsortcheck.so; export SORTCHECK_OPTIONS=print_to_syslog=1;"
+ENV="export LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}$ROOT/bin/libsortcheck.so; export SORTCHECK_OPTIONS=print_to_syslog=1;"
 time /bin/bash -c "$ENV $CMD" > /dev/null
 time /bin/bash -c "$ENV $CMD" > /dev/null
 time /bin/bash -c "$ENV $CMD" > /dev/null
