@@ -129,20 +129,21 @@ tested SortChecker on Ubuntu.
 
 * SortChecker does not detect dlopen/dlclose; this causes
 addresses from dynamically loaded libs to not be pretty-printed.
+* SortChecker may not be fully thread-safe yet
 
 # TODO
 
 Various TODOs are scattered all over the codebase.
 Here's the high-level stuff, sorted by priority:
-* (!!) ensure that code is thread-safe
 * (!!) intercept dlopen/dlclose to be able to pretty-print addresses in plugins
 * (!!) use it to debug remaining errors in Ubuntu
 * (!!) verify that Ubuntu is 100% stable under libsortcheck
+* (!!) apply to 500 random Debian packages
+* (!) disable reporting based on process name
 * (!) print complete backtrace rather than just address of caller (libunwind?)
-* (!) do not report repetative errors for some comparison function
-* disable reporting based on process name
+* (!) ensure that code is thread-safe
+* do not report repetative errors for same comparison function
 * print array elements which triggered errors (i.e. hex dumps)
-* provide flag(s) to tune aggressiveness of the checker (e.g. how many elements to consider, etc.)
 * check other popular sorters (g\_qsort\_with\_data)
 * resolve problems with AppArmor/SEL
 
