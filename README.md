@@ -142,6 +142,7 @@ Here's the high-level stuff, sorted by priority:
 * (!) disable reporting based on process name
 * (!) print complete backtrace rather than just address of caller (libunwind?)
 * (!) ensure that code is thread-safe
+* detect aborts when running comparison functions (by intercepting signals?)
 * do not report repetative errors for same comparison function
 * print array elements which triggered errors (i.e. hex dumps)
 * check other popular sorters (g\_qsort\_with\_data)
