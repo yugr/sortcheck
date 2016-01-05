@@ -128,16 +128,14 @@ tested SortChecker on Ubuntu.
 
 # Known issues
 
-* SortChecker does not detect dlopen/dlclose; this causes
-addresses from dynamically loaded libs to not be pretty-printed.
-* SortChecker may not be fully thread-safe yet
+* SortChecker is not fully thread-safe yet
+* SortChecker is currently Linux-only (relies on LD\_PRELOAD)
 
 # TODO
 
 Various TODOs are scattered all over the codebase.
 Here's the high-level stuff, sorted by priority:
-* (!!) intercept dlopen/dlclose to be able to pretty-print addresses in plugins
-* (!!) use it to debug remaining errors in Ubuntu
+* (!!) debug remaining errors in Ubuntu
 * (!!) verify that Ubuntu is 100% stable under libsortcheck
 * (!!) apply to 500 random Debian packages
 * (!) disable reporting based on process name

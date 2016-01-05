@@ -27,29 +27,72 @@ enum CheckFlags {
   CHECK_ALL          = 0xffffffff,
 };
 
+// TODO: proper atomics here
+#define barrier() asm("");
+
 // Runtime options
 static int debug = 0;
 static int max_errors = 10;
 static unsigned check_flags = CHECK_DEFAULT;
 static FILE *out;
 
+typedef struct ProcMapNode_ {
+  ProcMap *maps;
+  size_t nmaps;
+  struct ProcMapNode_ *next;
+  int dlopen_gen;
+} ProcMapNode;
+
 // Other pieces of state
 static volatile int init_in_progress = 0, init_done = 0;
-static ProcMap *maps = 0;
-static char *proc_name = 0;
-static char *proc_cmdline = 0;
-static size_t nmaps = 0;
+static ProcMapNode maps_first, *maps_head = &maps_first;
+static int dlopen_gen;
+static char *proc_name, *proc_cmdline;
 static int num_errors = 0;
 static long proc_pid = -1;
 static int do_report_error = 1;
 
 static void fini(void) {
-  if(maps)
-    free(maps);
+  // FIXME: do we really need to release this stuff?
+
+  ProcMapNode *maps_head_ = maps_head;
+  maps_head = &maps_first;
+  barrier();
+  for(; maps_head_ != &maps_first; ) {
+    ProcMapNode *old = maps_head_;
+    maps_head_ = maps_head_->next;
+    free(old->maps);
+    free(old);
+  }
+
   if(proc_cmdline)
     free(proc_cmdline);
   if(proc_name)
     free(proc_name);
+}
+
+static void update_maps() {
+  int gen = dlopen_gen;
+  barrier();
+
+  assert(gen >= maps_head->dlopen_gen);
+  if(gen == maps_head->dlopen_gen)
+    return;
+
+  ProcMapNode *new = malloc(sizeof(ProcMapNode));
+  new->maps = get_proc_maps(&new->nmaps);
+  new->next = maps_head;
+  new->dlopen_gen = gen;
+  maps_head = new;  // TODO: CAS?
+
+  if(debug) {
+    fprintf(out, "Process map (gen %d):\n", new->dlopen_gen);
+    size_t i;
+    for(i = 0; i < new->nmaps; ++i) {
+      const ProcMap *m = &new->maps[i];
+      fprintf(out, "  %50s: %p-%p\n", &m->name[0], m->begin_addr, m->end_addr);
+    }
+  }
 }
 
 static void init(void) {
@@ -59,12 +102,13 @@ static void init(void) {
   // TODO: proper atomics here
   if(init_in_progress) {
     while(!init_done)
-      asm("");
+      barrier();
+    // TODO: sleep?
     return;
   }
 
   init_in_progress = 1;
-  asm("");
+  barrier();
 
   const char *out_filename = 0;
   int print_to_syslog = 0;
@@ -157,16 +201,8 @@ static void init(void) {
   } else
     out = stderr;
 
-  // Get mappings
-  maps = get_proc_maps(&nmaps);
-  if(debug) {
-    fputs("Process map:\n", out);
-    size_t i;
-    for(i = 0; i < nmaps; ++i)
-      fprintf(out, "  %50s: %p-%p\n", &maps[i].name[0], maps[i].begin_addr, maps[i].end_addr);
-  }
-
   get_proc_cmdline(&proc_name, &proc_cmdline);
+  dlopen_gen = 1; // Will cause recalculation of mappings
 
   proc_pid = (long)getpid();
 
@@ -176,7 +212,7 @@ static void init(void) {
     free(opts_);
 
   // TODO: proper atomics here
-  asm("");
+  barrier();
   init_done = 1;
   init_in_progress = 0;
 }
@@ -204,7 +240,9 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
   if(!ctx->cmp_module) {
     // Lazily compute modules (no race!)
 
-    const ProcMap *map_for_cmp = find_proc_map_for_addr(maps, nmaps, ctx->cmp_addr);
+    update_maps();
+
+    const ProcMap *map_for_cmp = find_proc_map_for_addr(maps_head->maps, maps_head->nmaps, ctx->cmp_addr);
     if(map_for_cmp) {
       ctx->cmp_module = &map_for_cmp->name[0];
       ctx->cmp_offset = (size_t)ctx->cmp_addr;
@@ -215,7 +253,7 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
       ctx->cmp_offset = 0;
     }
 
-    const ProcMap *map_for_caller = find_proc_map_for_addr(maps, nmaps, ctx->ret_addr);
+    const ProcMap *map_for_caller = find_proc_map_for_addr(maps_head->maps, maps_head->nmaps, ctx->ret_addr);
     if(map_for_caller) {
       ctx->caller_module = &map_for_caller->name[0];
       ctx->caller_offset = (size_t)ctx->ret_addr;
@@ -472,4 +510,18 @@ EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
 }
 
 // TODO: qsort_r
+
+EXPORT void *dlopen(const char *filename, int flag) {
+  GET_REAL(dlopen);
+  void *res = _real(filename, flag);
+  ++dlopen_gen; // TODO: proper atomics here
+  return res;
+}
+
+EXPORT int dlclose(void *handle) {
+  GET_REAL(dlclose);
+  int res = _real(handle);
+  ++dlopen_gen; // TODO: proper atomics here
+  return res;
+}
 
