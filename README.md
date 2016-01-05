@@ -135,15 +135,11 @@ tested SortChecker on Ubuntu.
 
 Various TODOs are scattered all over the codebase.
 Here's the high-level stuff, sorted by priority:
-* (!!) debug remaining errors in Ubuntu
-* (!!) verify that Ubuntu is 100% stable under libsortcheck
-* (!!) apply to 500 random Debian packages
-* (!) disable reporting based on process name
-* (!) print complete backtrace rather than just address of caller (libunwind?)
-* (!) ensure that code is thread-safe
-* detect aborts when running comparison functions (by intercepting signals?)
+* check other popular sorters (g\_qsort\_with\_data in GLib and similar stuff in Gnulib, Libiberty)
+* ensure that code is thread-safe
+* print complete backtrace rather than just address of caller (libunwind?)
 * do not report repetative errors for same comparison function
 * print array elements which triggered errors (i.e. hex dumps)
-* check other popular sorters (g\_qsort\_with\_data)
+* detect aborts when running comparison functions by intercepting SEGV?
 * resolve problems with AppArmor/SEL
 
