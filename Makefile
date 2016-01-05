@@ -50,6 +50,7 @@ help:
 	@echo "  all        Build all executables and scripts"
 	@echo "  clean      Clean all build files and temps."
 	@echo "  help       Print help on build options."
+	@echo '  install    Install to $$DESTDIR (default is /usr).'
 	@echo ""
 	@echo "Less common:"
 	@echo "  check      Run regtests."
