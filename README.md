@@ -36,9 +36,6 @@ The tool has found errors in many programs.  Here are some trophies:
 * [dpkg: pkg\_sorter\_by\_listfile\_phys\_offs violates qsort requirements](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=808912) (fixed)
 * [Fontforge: line\_pt\_cmp violates qsort ordering axioms](https://github.com/fontforge/fontforge/issues/2602)
 
-There are also numerous reports for GCC (in progress), Firefox (libxul.so) and
-other heavyweight stuff (nautilus, Unity apps, etc.).
-
 I haven't seen a noticeable slowdown when working in checked Ubuntu
 or building C++ projects with a checked compiler.
 
