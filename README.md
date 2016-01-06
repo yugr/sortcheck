@@ -57,8 +57,10 @@ You could also use a helper script sortcheck to do this for you:
 $ sortcheck myapp ...
 ```
 
-You can customize behavior through SORTCHECK\_OPTIONS environment
-variable - a colon-separated list of option assignments e.g.
+By default SortChecker enables a set of common checks which should
+be enough for most users. You can also customize it's behavior
+through SORTCHECK\_OPTIONS environment variable which is
+a colon-separated list of option assignments e.g.
 
 ```
 $ export SORTCHECK_OPTIONS=debug=1:max_errors=10
@@ -79,7 +81,7 @@ available options are
   and does not modify inputs (enabled by default)
   * sorted - check that arrays passed to bsearch are sorted (enabled
   by default)
-  * symmetry - check that cmp(x,y) == cmp(y,x) (enabled by default)
+  * symmetry - check that cmp(x,y) == -cmp(y,x) (enabled by default)
   * transitivity - check that if x < y && y < z, then x < z
   (enabled by default)
   * reflexivity - check that cmp(x,x) == 0 (usually not very important
