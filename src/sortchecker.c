@@ -101,9 +101,25 @@ static void init(void) {
 
   // TODO: proper atomics here
   if(init_in_progress) {
+    // This is a workaround for recursive deadlock with libcowdancer:
+    // (gdb) bt
+    // #0  init () at src/sortchecker.c:105
+    // #1  0x00007f4c2bc125c4 in bsearch (key=0x7fff1b02d130, data=0x7f4c2c1e1010, n=20721, sz=16, cmp=0x7f4c2be177d0 <compare_ilist>)
+    //     at src/sortchecker.c:468
+    // #2  0x00007f4c2be16e42 in ?? () from /usr/lib/cowdancer/libcowdancer.so
+    // #3  0x00007f4c2be173e7 in fopen () from /usr/lib/cowdancer/libcowdancer.so
+    // #4  0x00007f4c2bc11806 in init () at src/sortchecker.c:197
+    // #5  0x00007f4c2bc129a0 in qsort (data=0x6f0e20 <static_shell_builtins>, n=76, sz=48, cmp=0x4746a0) at src/sortchecker.c:502
+    // #6  0x0000000000420c9e in ?? ()
+    // #7  0x000000000041f2cd in main ()
+    //
+    // FIXME: we should be able to detect recursion
+#if 0
     while(!init_done)
       barrier();
     // TODO: sleep?
+#endif
+
     return;
   }
 
@@ -467,7 +483,7 @@ trans_check_done:
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(bsearch);
-  if(num_errors < max_errors) {
+  if(!init_in_progress && num_errors < max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, n, sz);
     check_total_order(&ctx, cmp, key, data, n, sz);  // manpage does not require this but still
@@ -479,7 +495,7 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
 EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lfind);
-  if(num_errors < max_errors) {
+  if(!init_in_progress && num_errors < max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, *n, sz);
     check_total_order(&ctx, cmp, key, data, *n, sz);
@@ -490,7 +506,7 @@ EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_f
 EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lsearch);
-  if(num_errors < max_errors) {
+  if(!init_in_progress && num_errors < max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, *n, sz);
     check_total_order(&ctx, cmp, key, data, *n, sz);
@@ -501,7 +517,7 @@ EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(qsort);
-  if(num_errors < max_errors) {
+  if(!init_in_progress && num_errors < max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, 0, data, n, sz);
     check_total_order(&ctx, cmp, 0, data, n, sz);
