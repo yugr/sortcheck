@@ -12,11 +12,8 @@ or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)).
 The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
 It could be applied to both C and C++ programs although for the
-latter std::sort and std::binary\_search are more typical.
-Checking those would be more involved and require
-compile-time instrumentation (a simple one though).
-CTI would also help with inline implementations of bsearch
-used in modern Glibc.
+latter std::sort and std::binary\_search are more typical
+(see [Future plans](#Future-plans).
 
 The tool is a proof-of-concept so it's hacky and slower than
 necessary. Still it's quite robust - I've successfully
@@ -132,15 +129,27 @@ tested SortChecker on Ubuntu.
 * SortChecker is not fully thread-safe yet
 * SortChecker is currently Linux-only (relies on LD\_PRELOAD)
 
-# TODO
+# Future plans
 
-Various TODOs are scattered all over the codebase.
-Here's the high-level stuff, sorted by priority:
-* check other popular sorters (g\_qsort\_with\_data in GLib and similar stuff in Gnulib, Libiberty)
-* ensure that code is thread-safe
-* print complete backtrace rather than just address of caller (libunwind?)
+The tool only supports C now which rules out most of C++ code
+because it uses (inline) std::sort and std::binary_search
+(and other similar APIs). To check C++, we need a simple
+compile-time instrumentation. This would also help with inline
+implementations of bsearch in modern Glibc.
+
+It may also make sense to check other popular sorting APIs:
+* Berkeley DB's set\_bt\_compare, set\_dup\_compare, etc.
+* Glib2's g\_qsort\_with\_data and other users of GCompareFunc/GCompareDataFunc
+* Gnulib's gl\_listelement\_compar\_fn and friends
+* Libiberty's splay\_tree API
+* OpenSSL's objects.h API
+* etc.
+
+Here's less high-level stuff (sorted by priority):
 * do not report repetative errors for same comparison function
+* ensure that code is thread-safe (may need lot's of platform-dependent code...)
+* print complete backtrace rather than just address of caller (libunwind?)
 * print array elements which triggered errors (i.e. hex dumps)
 * detect aborts when running comparison functions by intercepting SEGV?
-* resolve problems with AppArmor/SEL
+* other minor TODO/FIXME are scattered all over the codebase
 
