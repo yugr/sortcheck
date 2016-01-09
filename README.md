@@ -13,7 +13,7 @@ The tool works by intercepting qsort and friends through LD\_PRELOAD
 and performing various checks prior to passing control to libc.
 It could be applied to both C and C++ programs although for the
 latter std::sort and std::binary\_search are more typical
-(see [Future plans](#Future-plans).
+(see [Future plans](#future-plans)).
 
 The tool is a proof-of-concept so it's hacky and slower than
 necessary. Still it's quite robust - I've successfully
