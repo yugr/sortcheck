@@ -137,6 +137,8 @@ because it uses (inline) std::sort and std::binary_search
 (and other similar APIs). To check C++, we need a simple
 compile-time instrumentation. This would also help with inline
 implementations of bsearch in modern Glibc.
+Here's [discussion](http://lists.llvm.org/pipermail/llvm-dev/2016-January/093835.html)
+in LLVM mailing list.
 
 It may also make sense to check other popular sorting APIs:
 * Berkeley DB's set\_bt\_compare, set\_dup\_compare, etc.
