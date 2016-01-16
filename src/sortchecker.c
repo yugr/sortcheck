@@ -409,6 +409,7 @@ static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key,
     return;
 
   // TODO: 2 bits enough for status
+  // TODO: randomize selection of sub-array (and print seed in error message for repro)
   int8_t cmp_[32][32];
   n = n > 32 ? 32 : n;
   memset(cmp_, 0, sizeof(cmp_));
