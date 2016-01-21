@@ -106,6 +106,7 @@ You can run full Linux distro under SortChecker:
   export SORTCHECK_OPTIONS=print_to_syslog=1
   ```
 
+  TODO: this will not work for init and daemons!
 * reboot
 
 Disclaimer: in this mode libsortcheck.so will be preloaded to
