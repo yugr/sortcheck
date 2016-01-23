@@ -28,6 +28,7 @@ all: bin/libsortcheck.so
 
 install:
 	install -D bin/libsortcheck.so $(DESTDIR)/lib
+	install -D scripts/sortcheck $(DESTDIR)/bin
 
 check:
 	test/test.sh

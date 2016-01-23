@@ -18,4 +18,9 @@ fi
 
 CMD="$@"
 
-bash -c "export LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}$(dirname $0)/../bin/libsortcheck.so; $CMD"
+LIB=$(dirname $0)/../lib/libsortcheck.so
+if ! test -f $LIB; then
+  LIB=$(dirname $0)/../bin/libsortcheck.so
+fi
+
+bash -c "export LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}$LIB; $CMD"
