@@ -107,7 +107,7 @@ You can run full Linux distro under SortChecker:
 * create a global config:
 
   ```
-  $ echo print_to_syslog=1:check=reflexivity | tee /SORTCHECK_OPTIONS 
+  $ echo print_to_syslog=1:check=default,reflexivity | tee /SORTCHECK_OPTIONS 
   $ sudo chmod a+r /SORTCHECK_OPTIONS
   ```
 
