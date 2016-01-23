@@ -66,6 +66,9 @@ a colon-separated list of option assignments e.g.
 $ export SORTCHECK_OPTIONS=debug=1:max_errors=10
 ```
 
+You can also put option string to /SORTCHECK\_OPTIONS file
+(this is particularly useful for testing of daemon processes).
+
 Supported options are
 * max\_errors - maximum number of errors to report (default 10)
 * debug - print debug info (default false)

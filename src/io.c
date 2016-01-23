@@ -3,7 +3,8 @@
 #include <io.h>
 
 char *read_file(const char *fname, size_t *plen) {
-  *plen = 0;
+  if(plen)
+    *plen = 0;
 
   FILE *p = fopen(fname, "rb");
   if(!p)
@@ -22,6 +23,8 @@ char *read_file(const char *fname, size_t *plen) {
   }
   fclose(p);
 
-  *plen = len;
+  if(plen)
+    *plen = len;
+
   return res;
 }

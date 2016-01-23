@@ -1,5 +1,7 @@
 #include <checksum.h>
 #include <proc_info.h>
+#include <flags.h>
+#include <io.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,26 +17,19 @@
 
 #define EXPORT __attribute__((visibility("default")))
 
-enum CheckFlags {
-  CHECK_BASIC        = 1 << 0,
-  CHECK_REFLEXIVITY  = 1 << 1,
-  CHECK_SYMMETRY     = 1 << 2,
-  CHECK_TRANSITIVITY = 1 << 3,
-  CHECK_SORTED       = 1 << 4,
-  CHECK_GOOD_BSEARCH = 1 << 5,
-  CHECK_DEFAULT      = CHECK_BASIC | CHECK_SYMMETRY
-                       | CHECK_TRANSITIVITY | CHECK_SORTED,
-  CHECK_ALL          = 0xffffffff,
-};
-
 // TODO: proper atomics here
 #define barrier() asm("");
 
 // Runtime options
-static int debug = 0;
-static int max_errors = 10;
-static unsigned check_flags = CHECK_DEFAULT;
 static FILE *out;
+static Flags flags = {
+  /*debug*/ 0,
+  /*max_errors*/ 10,
+  /*report_error*/ 1,
+  /*print_to_syslog*/ 0,
+  /*checks*/ CHECK_DEFAULT,
+  /*out_filename*/ 0
+};
 
 typedef struct ProcMapNode_ {
   ProcMap *maps;
@@ -50,7 +45,6 @@ static int dlopen_gen;
 static char *proc_name, *proc_cmdline;
 static int num_errors = 0;
 static long proc_pid = -1;
-static int do_report_error = 1;
 
 static void fini(void) {
   // FIXME: do we really need to release this stuff?
@@ -85,7 +79,7 @@ static void update_maps() {
   new->dlopen_gen = gen;
   maps_head = new;  // TODO: CAS?
 
-  if(debug) {
+  if(flags.debug) {
     fprintf(out, "Process map (gen %d):\n", new->dlopen_gen);
     size_t i;
     for(i = 0; i < new->nmaps; ++i) {
@@ -126,92 +120,32 @@ static void init(void) {
   init_in_progress = 1;
   barrier();
 
-  const char *out_filename = 0;
-  int print_to_syslog = 0;
-
-  const char *opts;
-  char *opts_ = 0;
-  if((opts = getenv("SORTCHECK_OPTIONS"))) {
-    opts_ = strdup(opts);
-
-    char *cur;
-    for(cur = opts_; *cur; ) {
-      // SORTCHECK_OPTIONS is a colon-separated list of assignments
-
-      const char *name = cur;
-
-      char *assign = strchr(cur, '=');
-      if(!assign) {
-        fprintf(stderr, "sortcheck: missing '=' in '%s'\n", cur);
-        exit(1);
-      }
-      *assign = 0;
-
-      char *value = assign + 1;
-
-      char *end = strchr(value, ':');
-      if(end)
-        *end = 0;
-      cur = end ? end + 1 : value + strlen(value);
-
-      if(0 == strcmp(name, "debug")) {
-        debug = atoi(value);
-      } else if(0 == strcmp(name, "print_to_syslog")) {
-        print_to_syslog = atoi(value);
-      } else if(0 == strcmp(name, "print_to_file")) {
-        out_filename = value;
-      } else if(0 == strcmp(name, "report_error")) {
-        do_report_error = atoi(value);
-      } else if(0 == strcmp(name, "max_errors")) {
-        max_errors = atoi(value);
-      } else if(0 == strcmp(name, "check")) {
-        unsigned flags = 0;
-        do {
-          char *next = strchr(value, ',');
-          if(next) {
-            *next = 0;
-            ++next;
-          }
-
-          int no = 0;
-          if(0 == strncmp(value, "no_", 3)) {
-            no = 1;
-            value += 3;
-          }
-
-#define PARSE_CHECK(m, s) if(0 == strcmp(s, value)) { \
-  if(no) flags &= ~m; else flags |= m; \
-} else
-          PARSE_CHECK(CHECK_BASIC, "basic")
-          PARSE_CHECK(CHECK_REFLEXIVITY, "reflexivity")
-          PARSE_CHECK(CHECK_SYMMETRY, "symmetry")
-          PARSE_CHECK(CHECK_TRANSITIVITY, "transitivity")
-          PARSE_CHECK(CHECK_SORTED, "sorted")
-          PARSE_CHECK(CHECK_GOOD_BSEARCH, "good_bsearch")
-          PARSE_CHECK(CHECK_DEFAULT, "default")
-          PARSE_CHECK(CHECK_ALL, "all")
-          {
-            fprintf(stderr, "sortcheck: unknown check '%s'\n", value);
-            exit(1);
-          }
-          value = next;
-        } while(value);
-        check_flags = flags;
-      } else {
-        fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
-        exit(1);
-      }
+  char *opts;
+  if((opts = read_file("/SORTCHECK_OPTIONS", 0))) {
+    if(!parse_flags(opts, &flags)) {
+      free(opts);
+      exit(1);
     }
+    free(opts);
   }
 
-  if(print_to_syslog && out_filename) {
+  if((opts = getenv("SORTCHECK_OPTIONS"))) {
+    opts = strdup(opts);
+    if(!parse_flags(opts, &flags)) {
+      free(opts);
+      exit(1);
+    }
+    free(opts);
+  }
+
+  if(flags.print_to_syslog && flags.out_filename) {
     fprintf(stderr, "sortcheck: both print_to_syslog and print_to_file were specified\n");
     exit(1);
-  } else if(print_to_syslog) {
+  } else if(flags.print_to_syslog) {
     openlog("", 0, LOG_USER);
-  } else if(out_filename) {
-    if(!(out = fopen(out_filename, "ab"))) {
-      fprintf(stderr, "sortcheck: failed to open %s for writing\n", out_filename);
+  } else if(flags.out_filename) {
+    if(!(out = fopen(flags.out_filename, "ab"))) {
+      fprintf(stderr, "sortcheck: failed to open %s for writing\n", flags.out_filename);
       exit(1);
     }
   } else
@@ -223,9 +157,6 @@ static void init(void) {
   proc_pid = (long)getpid();
 
   atexit(fini);
-
-  if(opts_)
-    free(opts_);
 
   // TODO: proper atomics here
   barrier();
@@ -244,13 +175,13 @@ typedef struct {
 } ErrorContext;
 
 static void report_error(ErrorContext *ctx, const char *fmt, ...) {
-  if(!do_report_error)
+  if(!flags.report_error)
     return;
 
   va_list ap;
   va_start(ap, fmt);
 
-  if(++num_errors > max_errors)  // Racy but ok
+  if(++num_errors > flags.max_errors)  // Racy but ok
     return;
 
   if(!ctx->cmp_module) {
@@ -318,7 +249,7 @@ static inline int sign(int x) {
 
 // Check that comparator is stable and does not modify arguments
 static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
-  if(!(check_flags & CHECK_BASIC))
+  if(!(flags.checks & CHECK_BASIC))
     return;
 
   const char *test_val = key ? key : data;
@@ -342,8 +273,8 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
       break;
     }
 
-    if((check_flags & CHECK_REFLEXIVITY)
-       && (!key || (check_flags & CHECK_GOOD_BSEARCH))) {
+    if((flags.checks & CHECK_REFLEXIVITY)
+       && (!key || (flags.checks & CHECK_GOOD_BSEARCH))) {
       cmp(val, val);
       if(cs != checksum(val, sz)) {
         report_error(ctx, "comparison function modifies data");
@@ -360,8 +291,8 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
       break;
     }
 
-    if((check_flags & CHECK_REFLEXIVITY)
-       && (!key || (check_flags & CHECK_GOOD_BSEARCH))) {
+    if((flags.checks & CHECK_REFLEXIVITY)
+       && (!key || (flags.checks & CHECK_GOOD_BSEARCH))) {
       if(cmp(val, val) != cmp(val, val)) {
         report_error(ctx, "comparison function returns unstable results");
         break;
@@ -372,7 +303,7 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
 
 // Check that array is sorted
 static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
-  if(!(check_flags & CHECK_SORTED))
+  if(!(flags.checks & CHECK_SORTED))
     return;
 
   if(key) {
@@ -389,7 +320,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
     }
   }
 
-  if(!key || (check_flags & CHECK_GOOD_BSEARCH)) {
+  if(!key || (flags.checks & CHECK_GOOD_BSEARCH)) {
     size_t i;
     for(i = 1; i < n; ++i) {
       const void *val = (const char *)data + i * sz;
@@ -405,7 +336,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
 // Check that ordering is total
 static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
   // Can check only good bsearch callbacks
-  if(key && !(check_flags & CHECK_GOOD_BSEARCH))
+  if(key && !(flags.checks & CHECK_GOOD_BSEARCH))
     return;
 
   // TODO: 2 bits enough for status
@@ -419,7 +350,7 @@ static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key,
   for(j = 0; j < n; ++j) {
     const void *a = (const char *)data + i * sz;
     const void *b = (const char *)data + j * sz;
-    if(i == j && !(check_flags & CHECK_REFLEXIVITY)) {
+    if(i == j && !(flags.checks & CHECK_REFLEXIVITY)) {
       // Do not call cmp(x,x) unless explicitly asked by user
       // because some projects assert on self-comparisons (e.g. GCC)
       cmp_[i][j] = 0;
@@ -432,7 +363,7 @@ static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key,
 
   // Totality by construction
 
-  if(check_flags & CHECK_REFLEXIVITY) {
+  if(flags.checks & CHECK_REFLEXIVITY) {
     for(i = 0; i < n; ++i) {
       // TODO: it may make sense to compare different but equal elements?
       if(0 != cmp_[i][i]) {
@@ -442,7 +373,7 @@ static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key,
     }
   }
 
-  if(check_flags & CHECK_SYMMETRY) {
+  if(flags.checks & CHECK_SYMMETRY) {
     for(i = 0; i < n; ++i)
     for(j = 0; j < i; ++j) {
       if(cmp_[i][j] != -cmp_[j][i]) {
@@ -453,7 +384,7 @@ static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key,
   }
 sym_check_done:
 
-  if(check_flags & CHECK_TRANSITIVITY) {
+  if(flags.checks & CHECK_TRANSITIVITY) {
     // FIXME: slow slow...
     for(i = 0; i < n; ++i)
     for(j = 0; j < i; ++j)
@@ -473,7 +404,7 @@ trans_check_done:
   static typeof(sym) *_real;                                 \
   if(!_real) {                                               \
     _real = (typeof(sym) *)dlsym(RTLD_NEXT, #sym);           \
-    if(debug)                                                \
+    if(flags.debug)                                          \
       fprintf(stderr, "Hello from %s interceptor!\n", #sym); \
   }
 
@@ -484,7 +415,7 @@ trans_check_done:
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(bsearch);
-  if(!init_in_progress && num_errors < max_errors) {
+  if(!init_in_progress && num_errors < flags.max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, n, sz);
     check_total_order(&ctx, cmp, key, data, n, sz);  // manpage does not require this but still
@@ -496,7 +427,7 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
 EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lfind);
-  if(!init_in_progress && num_errors < max_errors) {
+  if(!init_in_progress && num_errors < flags.max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, *n, sz);
     check_total_order(&ctx, cmp, key, data, *n, sz);
@@ -507,7 +438,7 @@ EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_f
 EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lsearch);
-  if(!init_in_progress && num_errors < max_errors) {
+  if(!init_in_progress && num_errors < flags.max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, *n, sz);
     check_total_order(&ctx, cmp, key, data, *n, sz);
@@ -518,7 +449,7 @@ EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(qsort);
-  if(!init_in_progress && num_errors < max_errors) {
+  if(!init_in_progress && num_errors < flags.max_errors) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, 0, data, n, sz);
     check_total_order(&ctx, cmp, 0, data, n, sz);
