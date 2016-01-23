@@ -80,6 +80,7 @@ than default stderr)
 default true)
 * check - comma-separated list of checks to perform;
 available options are
+  * default - default set of checks (see below)
   * basic - check that comparison functions return stable results
   and does not modify inputs (enabled by default)
   * sorted - check that arrays passed to bsearch are sorted (enabled
