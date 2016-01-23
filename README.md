@@ -104,13 +104,14 @@ available options are
 
 You can run full Linux distro under SortChecker:
 * add full path to libsortcheck.so to /etc/ld.so.preload
-* set options in /etc/profile:
+* create a global config:
 
   ```
-  export SORTCHECK_OPTIONS=print_to_syslog=1
+  $ echo print_to_syslog=1:check=reflexivity | tee /SORTCHECK_OPTIONS 
+  $ sudo chmod a+r /SORTCHECK_OPTIONS
   ```
 
-  TODO: this will not work for init and daemons!
+  TODO: ensure that this works for daemons!
 * reboot
 
 Disclaimer: in this mode libsortcheck.so will be preloaded to
