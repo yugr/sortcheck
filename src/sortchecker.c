@@ -2,6 +2,7 @@
 #include <proc_info.h>
 #include <flags.h>
 #include <io.h>
+#include <platform.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,11 +15,6 @@
 #include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-#define EXPORT __attribute__((visibility("default")))
-
-// TODO: proper atomics here
-#define barrier() asm("");
 
 // Runtime options
 static FILE *out;
