@@ -25,6 +25,8 @@ char *read_file(const char *fname, size_t *plen) {
 
   if(plen)
     *plen = len;
+  else
+    res[len] = 0;
 
   return res;
 }

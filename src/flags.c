@@ -5,6 +5,10 @@
 #include <string.h>
 
 int parse_flags(char *opt, Flags *flags) {
+  // Skip parasite newlines inserted by some editors
+  size_t newline = strcspn(opt, "\r\n");
+  opt[newline] = 0;
+
   for(; *opt; ) {
     // Flags is a colon-separated list of assignments
 
