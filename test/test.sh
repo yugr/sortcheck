@@ -17,6 +17,14 @@ get_option() {
   cat $1 | sed -n 's!.*\/\/ *'$2' *: *!!p'
 }
 
+get_syslog() {
+  if test -f /var/log/syslog; then
+    cat /var/log/syslog
+  else
+    journalctl -q
+  fi
+}
+
 for t in test/*.c; do
   gcc $t -Itest -o bin/a.out
   if has_option $t OPTS; then
@@ -30,7 +38,7 @@ for t in test/*.c; do
     ARGS=
   fi
 
-  cp /var/log/syslog bin/syslog.bak
+  get_syslog > bin/syslog.bak
 
   if ! LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}bin/libsortcheck.so bin/a.out $ARGS 2>bin/a.out.log; then
     error "$t: test exited with a non-zero exit code"
@@ -59,7 +67,8 @@ for t in test/*.c; do
   if has_option $t SYSLOG || has_option $t SYSLOG-NOT; then
     get_option $t SYSLOG > bin/syslog_checks.txt
     while read check; do
-      if ! comm -13 bin/syslog.bak /var/log/syslog | grep -q "$check"; then
+      get_syslog > bin/syslog
+      if ! comm -13 bin/syslog.bak bin/syslog | grep -q "$check"; then
         error "$t: syslog does not match pattern '$check'"
         failed=1
       fi
@@ -67,7 +76,8 @@ for t in test/*.c; do
 
     get_option $t SYSLOG-NOT > bin/syslog_checknots.txt
     while read checknot; do
-      if comm -13 bin/syslog.bak /var/log/syslog | grep -q "$check"; then
+      get_syslog > bin/syslog
+      if comm -13 bin/syslog.bak bin/syslog | grep -q "$check"; then
         error "$t: syslog matches prohibited pattern '$check'"
         failed=1
       fi
