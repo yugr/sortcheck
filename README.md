@@ -17,27 +17,28 @@ latter std::sort and std::binary\_search are more typical
 
 The tool is a proof-of-concept so it's hacky and slower than
 necessary. Still it's quite robust - I've successfully
-booted stock Ubuntu 14 and bootstrapped GCC 4.9 under it.
+booted stock Ubuntu 14 and Fedora 22 and bootstrapped
+GCC 4.9.
 
 # What are current results?
 
-I've done some basic testing of Ubuntu 14.04 distro under
-SortChecker (open file/web browsers, navigate system menus, etc.).
+I've done some basic testing of Ubuntu 14.04 and Fedora 22 distro
+under SortChecker (open file/web browsers, navigate system menus,
+install various apps, etc.).
 
 The tool has found errors in many programs.  Here are some trophies:
 * [Libxt6: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93273)
 * [Libharfbuzz: Invalid comparison function](https://bugs.freedesktop.org/show_bug.cgi?id=93274) (fixed)
 * [Libharfbuzz: Unsorted array used in bsearch](https://bugs.freedesktop.org/show_bug.cgi?id=93275) (fixed)
 * [Cpio: HOL\_ENTRY\_PTRCMP triggers undefined behavior](http://savannah.gnu.org/bugs/index.php?46638)
-* [GDB: Invalid comparison functions](https://sourceware.org/bugzilla/show_bug.cgi?id=19361)
 * [GCC: reload\_pseudo\_compare\_func violates qsort requirements](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68988) (confirmed)
 * [GCC: libbacktrace: bsearch over unsorted array in unit\_addrs\_search](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69050) (intentional)
 * [dpkg: pkg\_sorter\_by\_listfile\_phys\_offs violates qsort requirements](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=808912) (fixed)
 * [Fontforge: line\_pt\_cmp violates qsort ordering axioms](https://github.com/fontforge/fontforge/issues/2602)
 * [Flexible I/O Tester: Invalid comparison function](https://github.com/axboe/fio/issues/140) (fixed)
 
-I haven't seen a noticeable slowdown when working in checked Ubuntu
-or building C++ projects with a checked compiler.
+I haven't seen a noticeable slowdown when working in a fully checked
+distro or building C++ projects with a checked compiler.
 
 # Usage
 
@@ -129,7 +130,7 @@ If you enable AddressSanitizer you'll need to add libasan.so
 to LD\_PRELOAD (prior to libsortcheck.so).
 
 To test the tool, run make check. Note that I've myself only
-tested SortChecker on Ubuntu.
+tested SortChecker on Ubuntu and Fedora.
 
 # Known issues
 
