@@ -20,6 +20,9 @@ necessary. Still it's quite robust - I've successfully
 booted stock Ubuntu 14 and Fedora 22 and bootstrapped
 GCC 4.9.
 
+The project is MIT-licensed. It has no fancy dependencies,
+just Glibc and Bash.
+
 # What are current results?
 
 I've done some basic testing of Ubuntu 14.04 and Fedora 22 distro
