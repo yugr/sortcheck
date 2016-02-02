@@ -100,7 +100,7 @@ available options are
   this option tells SortChecker that it should test bsearch more
   aggressively (unsafe so disabled by default). Note that this
   option may cause runtime errors or crashes if applied
-  inappropriately),
+  inappropriately.
   * for each option XYZ there's a dual no\_XYZ (which disables
   corresponding check)
 
@@ -111,11 +111,10 @@ You can run full Linux distro under SortChecker:
 * create a global config:
 
   ```
-  $ echo print_to_syslog=1:check=default,reflexivity | sudo tee /SORTCHECK_OPTIONS 
+  $ echo print_to_syslog=1:check=default | sudo tee /SORTCHECK_OPTIONS 
   $ sudo chmod a+r /SORTCHECK_OPTIONS
   ```
 
-  TODO: ensure that this works for daemons!
 * reboot
 
 Disclaimer: in this mode libsortcheck.so will be preloaded to
