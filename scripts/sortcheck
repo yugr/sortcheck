@@ -1,5 +1,10 @@
 #!/bin/sh -e
 
+# Copyright 2015-2016 Yury Gribov
+# 
+# Use of this source code is governed by MIT license that can be
+# found in the LICENSE.txt file.
+
 if test $# = 0; then
   cat <<EOF
 $(basename $0) [OPTS] "CMDS"
