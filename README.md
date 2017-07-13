@@ -36,6 +36,7 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Cpio: HOL\_ENTRY\_PTRCMP triggers undefined behavior](http://savannah.gnu.org/bugs/index.php?46638)
 * [GCC: reload\_pseudo\_compare\_func violates qsort requirements](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68988) (confirmed)
 * [GCC: libbacktrace: bsearch over unsorted array in unit\_addrs\_search](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69050) (intentional)
+* [GCC: Fix intransitive comparison in dr\_group\_sort\_cmp](https://gcc.gnu.org/ml/gcc-patches/2015-12/msg02141.html) ([was already fixed on trunk](https://gcc.gnu.org/ml/gcc-patches/2015-11/msg02444.html))
 * [dpkg: pkg\_sorter\_by\_listfile\_phys\_offs violates qsort requirements](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=808912) (fixed)
 * [Fontforge: line\_pt\_cmp violates qsort ordering axioms](https://github.com/fontforge/fontforge/issues/2602)
 * [Flexible I/O Tester: Invalid comparison function](https://github.com/axboe/fio/issues/140) (fixed)
@@ -82,6 +83,8 @@ than default stderr)
 (default false)
 * do\_report\_error - print reports (only used for benchmarking,
 default true)
+* raise - raise signal on detecting violation (useful for
+inspecting issues in debugger)
 * check - comma-separated list of checks to perform;
 available options are
   * default - default set of checks (see below)
@@ -95,6 +98,8 @@ available options are
   * reflexivity - check that cmp(x,x) == 0 (usually not very important
   so disabled by default, on the other hand may trigger on otherwise
   undetected asymmetry bugs)
+  * unique - check that cmp does not compare different objects
+  as equal (to avoid [random orderings on different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html))
   * good\_bsearch - bsearch uses a restricted (non-symmetric) form
   of comparison function so some checks are not generally applicable;
   this option tells SortChecker that it should test bsearch more

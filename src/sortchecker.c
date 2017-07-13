@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdarg.h>
+#include <signal.h>
 
 #include <dlfcn.h>
 #include <syslog.h>
@@ -30,6 +31,7 @@ static Flags flags = {
   /*max_errors*/ 10,
   /*report_error*/ 1,
   /*print_to_syslog*/ 0,
+  /*raise*/ 0,
   /*checks*/ CHECK_DEFAULT,
   /*out_filename*/ 0
 };
@@ -242,6 +244,9 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
 
   if(full_msg != buf)
     free(full_msg);
+
+  if(flags.raise)
+    raise(SIGTRAP);
 }
 
 typedef int (*cmp_fun_t)(const void *, const void *);
@@ -300,6 +305,21 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
         report_error(ctx, "comparison function returns unstable results");
         break;
       }
+    }
+  }
+}
+
+static void check_uniqueness(ErrorContext *ctx, cmp_fun_t cmp, const void *data, size_t n, size_t sz) {
+  if(!(flags.checks & CHECK_UNIQUE))
+    return;
+
+  size_t i;
+  for(i = 1; i < n; ++i) {
+    const void *val = (const char *)data + i*sz;
+    const void *prev = (const char *)val - sz;
+    if(!cmp(val, prev) && 0 != memcmp(prev, val, sz)) {
+      report_error(ctx, "comparison function compares different objects as equal at index %zd", i);
+      return;  // Stop further reporting
     }
   }
 }
@@ -415,10 +435,14 @@ trans_check_done:
   if(!init_done) init(); \
 } while(0)
 
+static int suppress_errors() {
+  return init_in_progress || num_errors >= flags.max_errors;
+}
+
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(bsearch);
-  if(!init_in_progress && num_errors < flags.max_errors) {
+  if(!suppress_errors()) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
     check_basic(&ctx, cmp, key, data, n, sz);
     check_total_order(&ctx, cmp, key, data, n, sz);  // manpage does not require this but still
@@ -430,34 +454,40 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
 EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lfind);
-  if(!init_in_progress && num_errors < flags.max_errors) {
-    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  if(!suppress_errors()) {
     check_basic(&ctx, cmp, key, data, *n, sz);
     check_total_order(&ctx, cmp, key, data, *n, sz);
   }
   _real(key, data, n, sz, cmp);
+  if(!suppress_errors())
+    check_uniqueness(&ctx, cmp, data, n, sz);
 }
 
 EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lsearch);
-  if(!init_in_progress && num_errors < flags.max_errors) {
-    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  if(!suppress_errors()) {
     check_basic(&ctx, cmp, key, data, *n, sz);
     check_total_order(&ctx, cmp, key, data, *n, sz);
   }
   _real(key, data, n, sz, cmp);
+  if(!suppress_errors())
+    check_uniqueness(&ctx, cmp, data, n, sz);
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(qsort);
-  if(!init_in_progress && num_errors < flags.max_errors) {
-    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  if(!suppress_errors()) {
     check_basic(&ctx, cmp, 0, data, n, sz);
     check_total_order(&ctx, cmp, 0, data, n, sz);
   }
   _real(data, n, sz, cmp);
+  if(!suppress_errors())
+    check_uniqueness(&ctx, cmp, data, n, sz);
 }
 
 // TODO: qsort_r

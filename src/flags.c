@@ -45,6 +45,8 @@ int parse_flags(char *opt, Flags *flags) {
       flags->report_error = atoi(value);
     } else if(0 == strcmp(name, "max_errors")) {
       flags->max_errors = atoi(value);
+    } else if(0 == strcmp(name, "raise")) {
+      flags->raise = atoi(value);
     } else if(0 == strcmp(name, "check")) {
       unsigned checks = 0;
       do {
@@ -69,6 +71,7 @@ int parse_flags(char *opt, Flags *flags) {
         PARSE_CHECK(CHECK_TRANSITIVITY, "transitivity")
         PARSE_CHECK(CHECK_SORTED, "sorted")
         PARSE_CHECK(CHECK_GOOD_BSEARCH, "good_bsearch")
+        PARSE_CHECK(CHECK_UNIQUE, "unique")
         PARSE_CHECK(CHECK_DEFAULT, "default")
         PARSE_CHECK(CHECK_ALL, "all")
         {
