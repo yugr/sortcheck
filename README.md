@@ -6,7 +6,8 @@ in comparison functions passed to qsort
 (also bsearch, lfind, etc.). For complex data structures it's very
 easy to violate one of the requirements. Such violations cause
 undefined behavior and may lead to all sorts of runtime
-errors in practice (including [unexpected results](https://groups.google.com/d/topic/golang-checkins/w4YWUgBhjJ0)
+errors in practice (including [unexpected results](https://groups.google.com/d/topic/golang-checkins/w4YWUgBhjJ0),
+[inconsistent results across different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html)
 or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)).
 
 The tool works by intercepting qsort and friends through LD\_PRELOAD
