@@ -38,6 +38,7 @@ The tool has found errors in many programs.  Here are some trophies:
 * [GCC: reload\_pseudo\_compare\_func violates qsort requirements](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68988) (confirmed)
 * [GCC: libbacktrace: bsearch over unsorted array in unit\_addrs\_search](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69050) (intentional)
 * [GCC: Fix intransitive comparison in dr\_group\_sort\_cmp](https://gcc.gnu.org/ml/gcc-patches/2015-12/msg02141.html) ([was already fixed on trunk](https://gcc.gnu.org/ml/gcc-patches/2015-11/msg02444.html))
+* [GCC: Fix qsort ordering violation in tree-vrp.c](https://gcc.gnu.org/ml/gcc-patches/2017-07/msg00882.html) ([confirmed](https://gcc.gnu.org/ml/gcc-patches/2017-07/msg00897.html))
 * [dpkg: pkg\_sorter\_by\_listfile\_phys\_offs violates qsort requirements](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=808912) (fixed)
 * [Fontforge: line\_pt\_cmp violates qsort ordering axioms](https://github.com/fontforge/fontforge/issues/2602)
 * [Flexible I/O Tester: Invalid comparison function](https://github.com/axboe/fio/issues/140) (fixed)
@@ -148,7 +149,7 @@ tested SortChecker on Ubuntu and Fedora.
 # Future plans
 
 The tool only supports C now which rules out most of C++ code
-because it uses (inline) std::sort and std::binary_search
+because it uses (inline) std::sort and std::binary\_search
 (and other similar APIs). To check C++, we need a simple
 compile-time instrumentation. This would also help with inline
 implementations of bsearch in modern Glibc.
