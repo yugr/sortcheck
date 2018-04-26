@@ -461,7 +461,7 @@ EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_f
   }
   _real(key, data, n, sz, cmp);
   if(!suppress_errors())
-    check_uniqueness(&ctx, cmp, data, n, sz);
+    check_uniqueness(&ctx, cmp, data, *n, sz);
 }
 
 EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
@@ -474,7 +474,7 @@ EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t
   }
   _real(key, data, n, sz, cmp);
   if(!suppress_errors())
-    check_uniqueness(&ctx, cmp, data, n, sz);
+    check_uniqueness(&ctx, cmp, data, *n, sz);
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
