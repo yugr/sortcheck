@@ -64,6 +64,14 @@ You could also use a helper script sortcheck to do this for you:
 $ sortcheck myapp ...
 ```
 
+To debug the issue, you can run with
+
+```
+$ SORTCHECK_OPTIONS=raise=1 sortcheck myapp ...
+```
+
+and then examine generated coredump in gdb.
+
 By default SortChecker enables a set of common checks which should
 be enough for most users. You can also customize it's behavior
 through SORTCHECK\_OPTIONS environment variable which is
