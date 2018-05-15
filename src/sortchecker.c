@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <dlfcn.h>
 #include <syslog.h>
@@ -150,7 +151,8 @@ static void init(void) {
     openlog("", 0, LOG_USER);
   } else if(flags.out_filename) {
     if(!(out = fopen(flags.out_filename, "ab"))) {
-      fprintf(stderr, "sortcheck: failed to open %s for writing\n", flags.out_filename);
+      fprintf(stderr, "sortcheck: failed to open %s for writing: errno %d: ", flags.out_filename, errno);
+      perror(0);
       exit(1);
     }
   } else
@@ -428,7 +430,7 @@ trans_check_done:
   if(!_real) {                                               \
     _real = (typeof(sym) *)dlsym(RTLD_NEXT, #sym);           \
     if(flags.debug)                                          \
-      fprintf(stderr, "Hello from %s interceptor!\n", #sym); \
+      fprintf(out, "Hello from %s interceptor!\n", #sym); \
   }
 
 #define MAYBE_INIT do {  \
