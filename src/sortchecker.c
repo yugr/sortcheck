@@ -29,10 +29,11 @@
 static FILE *out;
 static Flags flags = {
   /*debug*/ 0,
-  /*max_errors*/ 10,
   /*report_error*/ 1,
   /*print_to_syslog*/ 0,
   /*raise*/ 0,
+  /*max_errors*/ 10,
+  /*sleep*/ 0,
   /*checks*/ CHECK_DEFAULT,
   /*out_filename*/ 0
 };
@@ -49,7 +50,7 @@ static volatile int init_in_progress = 0, init_done = 0;
 static ProcMapNode maps_first, *maps_head = &maps_first;
 static int dlopen_gen;
 static char *proc_name, *proc_cmdline;
-static int num_errors = 0;
+static unsigned num_errors = 0;
 static long proc_pid = -1;
 
 static void fini(void) {
@@ -246,6 +247,9 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
 
   if(full_msg != buf)
     free(full_msg);
+
+  if(flags.sleep)
+    sleep(flags.sleep);
 
   if(flags.raise)
     raise(SIGTRAP);

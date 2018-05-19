@@ -95,6 +95,8 @@ than default stderr)
 default true)
 * raise - raise signal on detecting violation (useful for
 inspecting issues in debugger)
+* sleep - sleep for N seconds before printing error and continuing
+(may be useful for attaching with gdb and examining the situation)
 * check - comma-separated list of checks to perform;
 available options are
   * default - default set of checks (see below)

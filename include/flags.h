@@ -22,11 +22,12 @@ enum CheckFlags {
 };
 
 typedef struct {
-  char debug;
-  char max_errors;
-  char report_error;
-  char print_to_syslog;
-  char raise;
+  char debug : 1;
+  char report_error : 1;
+  char print_to_syslog : 1;
+  char raise : 1;
+  unsigned max_errors;
+  unsigned sleep;
   unsigned checks;
   const char *out_filename;
 } Flags;

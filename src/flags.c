@@ -47,6 +47,8 @@ int parse_flags(char *opt, Flags *flags) {
       flags->max_errors = atoi(value);
     } else if(0 == strcmp(name, "raise")) {
       flags->raise = atoi(value);
+    } else if(0 == strcmp(name, "sleep")) {
+      flags->sleep = atoi(value);
     } else if(0 == strcmp(name, "check")) {
       unsigned checks = 0;
       do {
