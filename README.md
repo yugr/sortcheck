@@ -42,6 +42,7 @@ The tool has found errors in many programs.  Here are some trophies:
 * [dpkg: pkg\_sorter\_by\_listfile\_phys\_offs violates qsort requirements](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=808912) (fixed)
 * [Fontforge: line\_pt\_cmp violates qsort ordering axioms](https://github.com/fontforge/fontforge/issues/2602)
 * [Flexible I/O Tester: Invalid comparison function](https://github.com/axboe/fio/issues/140) (fixed)
+* [Infernal: Inconsistent results from qsort callback](https://github.com/EddyRivasLab/infernal/issues/11)
 
 I haven't seen a noticeable slowdown when working in a fully checked
 distro or building C++ projects with a checked compiler.
