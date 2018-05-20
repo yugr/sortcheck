@@ -16,6 +16,8 @@ enum CheckFlags {
   CHECK_SORTED       = 1 << 4,
   CHECK_GOOD_BSEARCH = 1 << 5,
   CHECK_UNIQUE       = 1 << 6,
+  // Do not check reflexivity because it's normally not important (CHECK_REFLEXIVITY).
+  // Do not assume bsearch is commutative (CHECK_GOOD_BSEARCH).
   CHECK_DEFAULT      = CHECK_BASIC | CHECK_SYMMETRY
                        | CHECK_TRANSITIVITY | CHECK_SORTED,
   CHECK_ALL          = 0xffffffff,

@@ -418,6 +418,9 @@ sym_check_done:
     for(i = 0; i < n; ++i)
     for(j = 0; j < i; ++j)
     for(k = 0; k < n; ++k) {
+      // Don't compare element to itself unless requested by user
+      if((i == k || j == k) && !(flags.checks & CHECK_REFLEXIVITY))
+        continue;
       if(cmp_[i][j] == cmp_[j][k] && cmp_[i][j] != cmp_[i][k]) {
         report_error(ctx, "comparison function is not transitive");
         goto trans_check_done;
