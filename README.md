@@ -44,7 +44,7 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Infernal: Inconsistent results from qsort callback](https://github.com/EddyRivasLab/infernal/issues/11) (confirmed)
 * [Graphicsmagick: Inconsistent results from qsort callback](https://sourceforge.net/p/graphicsmagick/bugs/562/)
 * [PostGIS: Inconsistent results from qsort callback](https://trac.osgeo.org/postgis/ticket/4093)
-* [Grass: Inconsistent results from qsort callback in g.mkfontcap](https://trac.osgeo.org/grass/ticket/3564)
+* [Grass: Inconsistent results from qsort callback in g.mkfontcap](https://trac.osgeo.org/grass/ticket/3564) (fixed)
 
 I haven't seen a noticeable slowdown when working in a fully checked
 distro or building C++ projects with a checked compiler.
