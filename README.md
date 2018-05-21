@@ -1,6 +1,6 @@
 # What is this?
 
-SortChecker is a proof-of-concept tool to detect violations
+SortChecker is a tool for detecting violations
 of [ordering axioms](http://pubs.opengroup.org/onlinepubs/009695399/functions/qsort.html)
 in comparison functions passed to qsort
 (also bsearch, lfind, etc.). For complex data structures it's very
@@ -16,9 +16,8 @@ It could be applied to both C and C++ programs although for the
 latter std::sort and std::binary\_search are more typical
 (see [Future plans](#future-plans)).
 
-The tool is a proof-of-concept so it's hacky and slower than
-necessary. Still it's quite robust - I've successfully
-booted stock Ubuntu 14 and Fedora 22 and bootstrapped
+The tool is quite robust - I've successfully
+booted stock Ubuntu 14, Fedora 22 and Debian chroot and bootstrapped
 GCC 4.9.
 
 The project is MIT-licensed. It has no fancy dependencies,
@@ -148,14 +147,14 @@ Makefile supports various candies (e.g. AddressSanitizer,
 debug build, etc.) - run make help for mode details.
 
 If you enable AddressSanitizer you'll need to add libasan.so
-to LD\_PRELOAD (prior to libsortcheck.so).
+to LD\_PRELOAD (before libsortcheck.so).
 
-To test the tool, run make check. Note that I've myself only
+To test the tool, run `make check`. Note that I've myself only
 tested SortChecker on Ubuntu and Fedora.
 
 # Known issues
 
-* SortChecker is not fully thread-safe yet
+* SortChecker is not fully thread-safe yet (should be easy to fix though)
 * SortChecker is currently Linux-only (relies on LD\_PRELOAD)
 
 # Future plans
@@ -165,7 +164,7 @@ because it uses (inline) std::sort and std::binary\_search
 (and other similar APIs). To check C++, we need a simple
 compile-time instrumentation. This would also help with inline
 implementations of bsearch in modern Glibc.
-Here's [discussion](http://lists.llvm.org/pipermail/llvm-dev/2016-January/093835.html)
+Here's a [discussion](http://lists.llvm.org/pipermail/llvm-dev/2016-January/093835.html)
 in LLVM mailing list.
 
 It may also make sense to check other popular sorting APIs:
@@ -178,9 +177,8 @@ It may also make sense to check other popular sorting APIs:
 
 Here's less high-level stuff (sorted by priority):
 * do not report repetative errors for same comparison function
-* ensure that code is thread-safe (may need lot's of platform-dependent code...)
+* ensure that code is thread-safe (may need lots of platform-dependent code...)
 * print complete backtrace rather than just address of caller (libunwind?)
 * print array elements which triggered errors (i.e. hex dumps)
-* detect aborts when running comparison functions by intercepting SEGV?
 * other minor TODO/FIXME are scattered all over the codebase
 
