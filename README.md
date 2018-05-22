@@ -43,7 +43,7 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Flexible I/O Tester: Invalid comparison function](https://github.com/axboe/fio/issues/140) (fixed)
 * [Infernal: Inconsistent results from qsort callback](https://github.com/EddyRivasLab/infernal/issues/11) (confirmed)
 * [Graphicsmagick: Inconsistent results from qsort callback](https://sourceforge.net/p/graphicsmagick/bugs/562/) (confirmed)
-* [PostGIS: Inconsistent results from qsort callback](https://trac.osgeo.org/postgis/ticket/4093)
+* [PostGIS: Inconsistent results from qsort callback](https://trac.osgeo.org/postgis/ticket/4093) (fixed)
 * [Grass: Inconsistent results from qsort callback in g.mkfontcap](https://trac.osgeo.org/grass/ticket/3564) (fixed)
 
 I haven't seen a noticeable slowdown when working in a fully checked
