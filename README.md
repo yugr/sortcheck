@@ -42,7 +42,7 @@ The tool has found errors in many programs.  Here are some trophies:
 * [Fontforge: line\_pt\_cmp violates qsort ordering axioms](https://github.com/fontforge/fontforge/issues/2602)
 * [Flexible I/O Tester: Invalid comparison function](https://github.com/axboe/fio/issues/140) (fixed)
 * [Infernal: Inconsistent results from qsort callback](https://github.com/EddyRivasLab/infernal/issues/11) (fixed)
-* [Graphicsmagick: Inconsistent results from qsort callback](https://sourceforge.net/p/graphicsmagick/bugs/562/) (confirmed)
+* [Graphicsmagick: Inconsistent results from qsort callback](https://sourceforge.net/p/graphicsmagick/bugs/562/) (fixed)
 * [PostGIS: Inconsistent results from qsort callback](https://trac.osgeo.org/postgis/ticket/4093) (fixed)
 * [Grass: Inconsistent results from qsort callback in g.mkfontcap](https://trac.osgeo.org/grass/ticket/3564) (fixed)
 
