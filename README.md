@@ -3,17 +3,17 @@
 SortChecker is a tool for detecting violations
 of [ordering axioms](http://pubs.opengroup.org/onlinepubs/009695399/functions/qsort.html)
 in comparison functions passed to qsort
-(also bsearch, lfind, etc.). For complex data structures it's very
+(also `bsearch`, `lfind`, etc.). For complex data structures it's very
 easy to violate one of the requirements. Such violations cause
 undefined behavior and may lead to all sorts of runtime
 errors in practice (including [unexpected results](https://groups.google.com/d/topic/golang-checkins/w4YWUgBhjJ0),
 [inconsistent results across different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html)
 or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)).
 
-The tool works by intercepting qsort and friends through LD\_PRELOAD
+The tool works by intercepting qsort and friends through `LD_PRELOAD`
 and performing various checks prior to passing control to libc.
 It could be applied to both C and C++ programs although for the
-latter std::sort and std::binary\_search are more typical
+latter std::sort and `std::binary_search` are more typical
 (see [Future plans](#future-plans)).
 
 The tool is quite robust - I've successfully
@@ -77,57 +77,57 @@ and then examine generated coredump in gdb.
 
 By default SortChecker enables a set of common checks which should
 be enough for most users. You can also customize it's behavior
-through SORTCHECK\_OPTIONS environment variable which is
+through `SORTCHECK_OPTIONS` environment variable which is
 a colon-separated list of option assignments e.g.
 
 ```
 $ export SORTCHECK_OPTIONS=debug=1:max_errors=10
 ```
 
-You can also put option string to /SORTCHECK\_OPTIONS file
+You can also put option string to `/SORTCHECK_OPTIONS` file
 (this is particularly useful for testing of daemon processes).
 
 Supported options are
-* max\_errors - maximum number of errors to report (default 10)
-* debug - print debug info (default false)
-* print\_to\_file - print warnings to specified file (rather
+* `max_errors` - maximum number of errors to report (default 10)
+* `debug` - print debug info (default false)
+* `print_to_file` - print warnings to specified file (rather
 than default stderr)
-* print\_to\_syslog - print warnings to syslog instead of stderr
+* `print_to_syslog` - print warnings to syslog instead of stderr
 (default false)
-* do\_report\_error - print reports (only used for benchmarking,
+* `do_report_error` - print reports (only used for benchmarking,
 default true)
-* raise - raise signal on detecting violation (useful for
+* `raise` - raise signal on detecting violation (useful for
 inspecting issues in debugger)
-* sleep - sleep for N seconds before printing error and continuing
+* `sleep` - sleep for N seconds before printing error and continuing
 (may be useful for attaching with gdb and examining the situation)
-* check - comma-separated list of checks to perform;
+* `check` - comma-separated list of checks to perform;
 available options are
-  * default - default set of checks (see below)
-  * basic - check that comparison functions return stable results
+  * `default` - default set of checks (see below)
+  * `basic` - check that comparison functions return stable results
   and does not modify inputs (enabled by default)
-  * sorted - check that arrays passed to bsearch are sorted (enabled
+  * `sorted` - check that arrays passed to bsearch are sorted (enabled
   by default)
-  * symmetry - check that cmp(x,y) == -cmp(y,x) (enabled by default)
-  * transitivity - check that if x < y && y < z, then x < z
+  * `symmetry` - check that cmp(x,y) == -cmp(y,x) (enabled by default)
+  * `transitivity` - check that if x < y && y < z, then x < z
   (enabled by default)
-  * reflexivity - check that cmp(x,x) == 0 (usually not very important
+  * `reflexivity` - check that cmp(x,x) == 0 (usually not very important
   so disabled by default, on the other hand may trigger on otherwise
   undetected asymmetry bugs)
-  * unique - check that cmp does not compare different objects
+  * `unique` - check that cmp does not compare different objects
   as equal (to avoid [random orderings on different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html))
-  * good\_bsearch - bsearch uses a restricted (non-symmetric) form
+  * `good_bsearch` - bsearch uses a restricted (non-symmetric) form
   of comparison function so some checks are not generally applicable;
   this option tells SortChecker that it should test bsearch more
   aggressively (unsafe so disabled by default). Note that this
   option may cause runtime errors or crashes if applied
   inappropriately.
-  * for each option XYZ there's a dual no\_XYZ (which disables
+  * for each option `XYZ` there's a dual `no_XYZ` (which disables
   corresponding check)
 
 # Applying to full distribution
 
 You can run full Linux distro under SortChecker:
-* add full path to libsortcheck.so to /etc/ld.so.preload
+* add full path to `libsortcheck.so` to `/etc/ld.so.preload`
 * create a global config:
 
   ```
@@ -149,7 +149,7 @@ Makefile supports various candies (e.g. AddressSanitizer,
 debug build, etc.) - run make help for mode details.
 
 If you enable AddressSanitizer you'll need to add libasan.so
-to LD\_PRELOAD (before libsortcheck.so).
+to `LD_PRELOAD` (before `libsortcheck.so`).
 
 To test the tool, run `make check`. Note that I've myself only
 tested SortChecker on Ubuntu and Fedora.
@@ -157,12 +157,12 @@ tested SortChecker on Ubuntu and Fedora.
 # Known issues
 
 * SortChecker is not fully thread-safe yet (should be easy to fix though)
-* SortChecker is currently Linux-only (relies on LD\_PRELOAD)
+* SortChecker is currently Linux-only (relies on `LD_PRELOAD`)
 
 # Future plans
 
 The tool only supports C now which rules out most of C++ code
-because it uses (inline) std::sort and std::binary\_search
+because it uses (inline) `std::sort` and `std::binary_search`
 (and other similar APIs). To check C++, we need a simple
 compile-time instrumentation. This would also help with inline
 implementations of bsearch in modern Glibc.
@@ -170,10 +170,12 @@ Here's a [discussion](http://lists.llvm.org/pipermail/llvm-dev/2016-January/0938
 in LLVM mailing list.
 
 It may also make sense to check other popular sorting APIs:
-* Berkeley DB's set\_bt\_compare, set\_dup\_compare, etc.
-* Glib2's g\_qsort\_with\_data and other users of GCompareFunc/GCompareDataFunc
-* Gnulib's gl\_listelement\_compar\_fn and friends
-* Libiberty's splay\_tree API
+* BSD's `{alpha,heap,radix,merge,version}sort`
+* `fts_open`, `scandir`
+* Berkeley DB's `set_bt_compare`, `set_dup_compare`, etc.
+* Glib2's `g_qsort_with_data` and other users of GCompareFunc/GCompareDataFunc
+* Gnulib's `gl_listelement_compar_fn` and friends
+* Libiberty's `splay_tree` API
 * OpenSSL's objects.h API
 * etc.
 
@@ -183,4 +185,3 @@ Here's less high-level stuff (sorted by priority):
 * print complete backtrace rather than just address of caller (libunwind?)
 * print array elements which triggered errors (i.e. hex dumps)
 * other minor TODO/FIXME are scattered all over the codebase
-
