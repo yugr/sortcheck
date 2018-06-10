@@ -5,7 +5,9 @@
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
-set -e
+set -eu
+
+cd $(dirname $0)/..
 
 num_errors=0
 
