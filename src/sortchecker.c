@@ -256,13 +256,24 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
 }
 
 typedef int (*cmp_fun_t)(const void *, const void *);
+typedef int (*cmp_r_fun_t)(const void *, const void *, void *);
+
+typedef struct {
+  void *cmp;
+  void *arg;
+  int is_reentrant;
+} Comparator;
+
+static inline int cmp_eval(const Comparator *cmp, const void *a, const void *b) {
+  return cmp->is_reentrant ? ((cmp_r_fun_t)cmp->cmp)(a, b, cmp->arg) : ((cmp_fun_t)cmp->cmp)(a, b);
+}
 
 static inline int sign(int x) {
   return x < 0 ? -1 : x > 0 ? 1 : 0;
 }
 
 // Check that comparator is stable and does not modify arguments
-static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+static void check_basic(ErrorContext *ctx, const Comparator *cmp, const char *key, const void *data, size_t n, size_t sz) {
   if(!(flags.checks & CHECK_BASIC))
     return;
 
@@ -276,7 +287,7 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
   for(i = i0; i < n; ++i) {
     const void *val = (const char *)data + i * sz;
     unsigned cs = checksum(val, sz);
-    cmp(test_val, val);
+    cmp_eval(cmp, test_val, val);
     if(cs != checksum(val, sz)) {
       report_error(ctx, "comparison function modifies data");
       break;
@@ -289,7 +300,7 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
 
     if((flags.checks & CHECK_REFLEXIVITY)
        && (!key || (flags.checks & CHECK_GOOD_BSEARCH))) {
-      cmp(val, val);
+      cmp_eval(cmp, val, val);
       if(cs != checksum(val, sz)) {
         report_error(ctx, "comparison function modifies data");
         break;
@@ -300,14 +311,14 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
   // Check for non-constant return value
   for(i = i0; i < n; ++i) {
     const void *val = (const char *)data + i * sz;
-    if(cmp(test_val, val) != cmp(test_val, val)) {
+    if(cmp_eval(cmp, test_val, val) != cmp_eval(cmp, test_val, val)) {
       report_error(ctx, "comparison function returns unstable results");
       break;
     }
 
     if((flags.checks & CHECK_REFLEXIVITY)
        && (!key || (flags.checks & CHECK_GOOD_BSEARCH))) {
-      if(cmp(val, val) != cmp(val, val)) {
+      if(cmp_eval(cmp, val, val) != cmp_eval(cmp, val, val)) {
         report_error(ctx, "comparison function returns unstable results");
         break;
       }
@@ -315,7 +326,7 @@ static void check_basic(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const
   }
 }
 
-static void check_uniqueness(ErrorContext *ctx, cmp_fun_t cmp, const void *data, size_t n, size_t sz) {
+static void check_uniqueness(ErrorContext *ctx, const Comparator *cmp, const void *data, size_t n, size_t sz) {
   if(!(flags.checks & CHECK_UNIQUE))
     return;
 
@@ -323,7 +334,7 @@ static void check_uniqueness(ErrorContext *ctx, cmp_fun_t cmp, const void *data,
   for(i = 1; i < n; ++i) {
     const void *val = (const char *)data + i*sz;
     const void *prev = (const char *)val - sz;
-    if(!cmp(val, prev) && 0 != memcmp(prev, val, sz)) {
+    if(!cmp_eval(cmp, val, prev) && 0 != memcmp(prev, val, sz)) {
       report_error(ctx, "comparison function compares different objects as equal at index %zd", i);
       return;  // Stop further reporting
     }
@@ -331,7 +342,7 @@ static void check_uniqueness(ErrorContext *ctx, cmp_fun_t cmp, const void *data,
 }
 
 // Check that array is sorted
-static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+static void check_sorted(ErrorContext *ctx, const Comparator *cmp, const char *key, const void *data, size_t n, size_t sz) {
   if(!(flags.checks & CHECK_SORTED))
     return;
 
@@ -340,7 +351,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
     size_t i;
     for(i = 0; i < n; ++i) {
       const void *val = (const char *)data + i * sz;
-      int new_order = sign(cmp(key, val));
+      int new_order = sign(cmp_eval(cmp, key, val));
       if(new_order > order) {
         report_error(ctx, "processed array is not sorted at index %zd", i);
         return;  // Return to stop further error reporting
@@ -354,7 +365,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
     for(i = 1; i < n; ++i) {
       const void *val = (const char *)data + i * sz;
       const void *prev = (const char *)val - sz;
-      if(cmp(prev, val) > 0) {
+      if(cmp_eval(cmp, prev, val) > 0) {
         report_error(ctx, "processed array is not sorted at index %zd", i);
         break;
       }
@@ -363,7 +374,7 @@ static void check_sorted(ErrorContext *ctx, cmp_fun_t cmp, const char *key, cons
 }
 
 // Check that ordering is total
-static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key, const void *data, size_t n, size_t sz) {
+static void check_total_order(ErrorContext *ctx, const Comparator *cmp, const char *key, const void *data, size_t n, size_t sz) {
   // Can check only good bsearch callbacks
   if(key && !(flags.checks & CHECK_GOOD_BSEARCH))
     return;
@@ -385,7 +396,7 @@ static void check_total_order(ErrorContext *ctx, cmp_fun_t cmp, const char *key,
       cmp_[i][j] = 0;
       continue;
     }
-    cmp_[i][j] = sign(cmp(a, b));
+    cmp_[i][j] = sign(cmp_eval(cmp, a, b));
   }
 
   // Following axioms from http://mathworld.wolfram.com/StrictOrder.html
@@ -453,9 +464,10 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
   GET_REAL(bsearch);
   if(!suppress_errors()) {
     ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
-    check_basic(&ctx, cmp, key, data, n, sz);
-    check_total_order(&ctx, cmp, key, data, n, sz);  // manpage does not require this but still
-    check_sorted(&ctx, cmp, key, data, n, sz);
+    Comparator c = { cmp, 0, 0 };
+    check_basic(&ctx, &c, key, data, n, sz);
+    check_total_order(&ctx, &c, key, data, n, sz);  // manpage does not require this but still
+    check_sorted(&ctx, &c, key, data, n, sz);
   }
   return _real(key, data, n, sz, cmp);
 }
@@ -464,42 +476,57 @@ EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_f
   MAYBE_INIT;
   GET_REAL(lfind);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  Comparator c = { cmp, 0, 0 };
   if(!suppress_errors()) {
-    check_basic(&ctx, cmp, key, data, *n, sz);
-    check_total_order(&ctx, cmp, key, data, *n, sz);
+    check_basic(&ctx, &c, key, data, *n, sz);
+    check_total_order(&ctx, &c, key, data, *n, sz);
   }
   _real(key, data, n, sz, cmp);
   if(!suppress_errors())
-    check_uniqueness(&ctx, cmp, data, *n, sz);
+    check_uniqueness(&ctx, &c, data, *n, sz);
 }
 
 EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lsearch);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  Comparator c = { cmp, 0, 0 };
   if(!suppress_errors()) {
-    check_basic(&ctx, cmp, key, data, *n, sz);
-    check_total_order(&ctx, cmp, key, data, *n, sz);
+    check_basic(&ctx, &c, key, data, *n, sz);
+    check_total_order(&ctx, &c, key, data, *n, sz);
   }
   _real(key, data, n, sz, cmp);
   if(!suppress_errors())
-    check_uniqueness(&ctx, cmp, data, *n, sz);
+    check_uniqueness(&ctx, &c, data, *n, sz);
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(qsort);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  Comparator c = { cmp, 0, 0 };
   if(!suppress_errors()) {
-    check_basic(&ctx, cmp, 0, data, n, sz);
-    check_total_order(&ctx, cmp, 0, data, n, sz);
+    check_basic(&ctx, &c, 0, data, n, sz);
+    check_total_order(&ctx, &c, 0, data, n, sz);
   }
   _real(data, n, sz, cmp);
   if(!suppress_errors())
-    check_uniqueness(&ctx, cmp, data, n, sz);
+    check_uniqueness(&ctx, &c, data, n, sz);
 }
 
-// TODO: qsort_r
+EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg) {
+  MAYBE_INIT;
+  GET_REAL(qsort_r);
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  Comparator c = { cmp, arg, 1 };
+  if (!suppress_errors()) {
+    check_basic(&ctx, &c, 0, data, n, sz);
+    check_total_order(&ctx, &c, 0, data, n, sz);
+  }
+  _real(data, n, sz, cmp, arg);
+  if (!suppress_errors())
+    check_uniqueness(&ctx, &c, data, n, sz);
+}
 
 EXPORT void *dlopen(const char *filename, int flag) {
   GET_REAL(dlopen);
@@ -514,4 +541,3 @@ EXPORT int dlclose(void *handle) {
   ++dlopen_gen; // TODO: proper atomics here
   return res;
 }
-
