@@ -500,18 +500,40 @@ EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t
     check_uniqueness(&ctx, &c, data, *n, sz);
 }
 
+static inline void qsort_common(void *data, size_t n, size_t sz, cmp_fun_t cmp,
+                         void (*real)(void *, size_t n, size_t sz, cmp_fun_t cmp),
+                         ErrorContext *ctx) {
+  Comparator c = { cmp, 0, 0 };
+  if(!suppress_errors()) {
+    check_basic(ctx, &c, 0, data, n, sz);
+    check_total_order(ctx, &c, 0, data, n, sz);
+  }
+  real(data, n, sz, cmp);
+  if(!suppress_errors())
+    check_uniqueness(ctx, &c, data, n, sz);
+}
+
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(qsort);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
-  Comparator c = { cmp, 0, 0 };
-  if(!suppress_errors()) {
-    check_basic(&ctx, &c, 0, data, n, sz);
-    check_total_order(&ctx, &c, 0, data, n, sz);
-  }
-  _real(data, n, sz, cmp);
-  if(!suppress_errors())
-    check_uniqueness(&ctx, &c, data, n, sz);
+  qsort_common(data, n, sz, cmp, _real, &ctx);
+}
+
+// BSD extension
+EXPORT void heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
+  MAYBE_INIT;
+  GET_REAL(heapsort);
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  qsort_common(data, n, sz, cmp, _real, &ctx);
+}
+
+// BSD extension
+EXPORT void mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
+  MAYBE_INIT;
+  GET_REAL(mergesort);
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  qsort_common(data, n, sz, cmp, _real, &ctx);
 }
 
 EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg) {

@@ -31,7 +31,11 @@ get_syslog() {
 }
 
 for t in test/*.c; do
-  gcc $t -Itest -o bin/a.out
+  if ! gcc $t -Itest $(get_option $t CFLAGS) -o bin/a.out; then
+    error "$t: compilation failed"
+    failed=1
+  fi
+
   if has_option $t OPTS; then
     export SORTCHECK_OPTIONS=$(get_option $t OPTS)
   else
@@ -95,4 +99,3 @@ for t in test/*.c; do
 done
 
 echo "Total: $num_errors errors"
- 

@@ -170,7 +170,6 @@ Here's a [discussion](http://lists.llvm.org/pipermail/llvm-dev/2016-January/0938
 in LLVM mailing list.
 
 It may also make sense to check other popular sorting APIs:
-* BSD's `{alpha,heap,radix,merge,version}sort`
 * `fts_open`, `scandir`
 * Berkeley DB's `set_bt_compare`, `set_dup_compare`, etc.
 * Glib2's `g_qsort_with_data` and other users of GCompareFunc/GCompareDataFunc
