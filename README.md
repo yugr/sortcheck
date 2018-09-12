@@ -179,8 +179,7 @@ It may also make sense to check other popular sorting APIs:
 * etc.
 
 Here's less high-level stuff (sorted by priority):
-* do not report repetative errors for same comparison function
-* ensure that code is thread-safe (may need lots of platform-dependent code...)
+* ensure that code is thread-safe (may need lots of platform-dependent code for atomics...)
 * print complete backtrace rather than just address of caller (libunwind?)
 * print array elements which triggered errors (i.e. hex dumps)
 * other minor TODO/FIXME are scattered all over the codebase

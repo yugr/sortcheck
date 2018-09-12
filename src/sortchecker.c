@@ -52,6 +52,7 @@ static int dlopen_gen;
 static char *proc_name, *proc_cmdline;
 static unsigned num_errors = 0;
 static long proc_pid = -1;
+static const void **reported_errors;
 
 static void fini(void) {
   // FIXME: do we really need to release this stuff?
@@ -70,6 +71,8 @@ static void fini(void) {
     free(proc_cmdline);
   if(proc_name)
     free(proc_name);
+  if(reported_errors)
+    free(reported_errors);
 }
 
 static void update_maps() {
@@ -164,6 +167,8 @@ static void init(void) {
 
   proc_pid = (long)getpid();
 
+  reported_errors = calloc(flags.max_errors, sizeof(void *));
+
   atexit(fini);
 
   // TODO: proper atomics here
@@ -180,17 +185,32 @@ typedef struct {
   const void *ret_addr;
   const char *caller_module;
   size_t caller_offset;
+  int found_error;
 } ErrorContext;
 
 static void report_error(ErrorContext *ctx, const char *fmt, ...) {
+  // Racy but ok
+  size_t i;
+  for(i = 0; i < flags.max_errors; ++i) {
+    if (!reported_errors[i]) {
+      reported_errors[i] = ctx->cmp_addr;
+      break;
+    }
+  }
+  if(i == flags.max_errors)
+    return;
+
+  // Increment global counter on first error in current invocation
+  if(!ctx->found_error) {
+    ctx->found_error = 1;
+    ++num_errors;
+  }
+
   if(!flags.report_error)
     return;
 
   va_list ap;
   va_start(ap, fmt);
-
-  if(++num_errors > flags.max_errors)  // Racy but ok
-    return;
 
   if(!ctx->cmp_module) {
     // Lazily compute modules (no race!)
@@ -227,7 +247,6 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
 
   char *full_msg = buf;
   size_t full_msg_size = sizeof(buf);
-  size_t i;
   for(i = 0; i < 2; ++i) {
     // TODO: some parts of the message may be precomputed
     size_t need = snprintf(full_msg, full_msg_size, "%s[%ld]: %s: %s (comparison function %p (%s+0x%zx), called from %p (%s+0x%zx), cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->cmp_addr, ctx->cmp_module, ctx->cmp_offset, ctx->ret_addr, ctx->caller_module, ctx->caller_offset, proc_cmdline);
@@ -455,15 +474,23 @@ trans_check_done:
   if(!init_done) init(); \
 } while(0)
 
-static int suppress_errors() {
-  return init_in_progress || num_errors >= flags.max_errors;
+static int suppress_errors(const void *cmp) {
+  if(init_in_progress || num_errors >= flags.max_errors)
+    return 1;
+  // Uniqueness check (racy but ok)
+  size_t i;
+  for(i = 0; i < flags.max_errors; ++i) {
+    if (reported_errors[i] == cmp)
+      return 1;
+  }
+  return 0;
 }
 
 EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(bsearch);
-  if(!suppress_errors()) {
-    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  if(!suppress_errors(cmp)) {
+    ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
     Comparator c = { cmp, 0, 0 };
     check_basic(&ctx, &c, key, data, n, sz);
     check_total_order(&ctx, &c, key, data, n, sz);  // manpage does not require this but still
@@ -475,28 +502,30 @@ EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp
 EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lfind);
-  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
   Comparator c = { cmp, 0, 0 };
-  if(!suppress_errors()) {
+  int suppress_errors_ = suppress_errors(cmp);
+  if(!suppress_errors_) {
     check_basic(&ctx, &c, key, data, *n, sz);
     check_total_order(&ctx, &c, key, data, *n, sz);
   }
   _real(key, data, n, sz, cmp);
-  if(!suppress_errors())
+  if(!suppress_errors_)
     check_uniqueness(&ctx, &c, data, *n, sz);
 }
 
 EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(lsearch);
-  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
   Comparator c = { cmp, 0, 0 };
-  if(!suppress_errors()) {
+  int suppress_errors_ = suppress_errors(cmp);
+  if(!suppress_errors_) {
     check_basic(&ctx, &c, key, data, *n, sz);
     check_total_order(&ctx, &c, key, data, *n, sz);
   }
   _real(key, data, n, sz, cmp);
-  if(!suppress_errors())
+  if(!suppress_errors_)
     check_uniqueness(&ctx, &c, data, *n, sz);
 }
 
@@ -504,19 +533,20 @@ static inline void qsort_common(void *data, size_t n, size_t sz, cmp_fun_t cmp,
                          void (*real)(void *, size_t n, size_t sz, cmp_fun_t cmp),
                          ErrorContext *ctx) {
   Comparator c = { cmp, 0, 0 };
-  if(!suppress_errors()) {
+  int suppress_errors_ = suppress_errors(cmp);
+  if(!suppress_errors_) {
     check_basic(ctx, &c, 0, data, n, sz);
     check_total_order(ctx, &c, 0, data, n, sz);
   }
   real(data, n, sz, cmp);
-  if(!suppress_errors())
+  if(!suppress_errors_)
     check_uniqueness(ctx, &c, data, n, sz);
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(qsort);
-  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
   qsort_common(data, n, sz, cmp, _real, &ctx);
 }
 
@@ -524,7 +554,7 @@ EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
 EXPORT void heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(heapsort);
-  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
   qsort_common(data, n, sz, cmp, _real, &ctx);
 }
 
@@ -532,21 +562,22 @@ EXPORT void heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
 EXPORT void mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(mergesort);
-  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
   qsort_common(data, n, sz, cmp, _real, &ctx);
 }
 
 EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg) {
   MAYBE_INIT;
   GET_REAL(qsort_r);
-  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0 };
+  ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
   Comparator c = { cmp, arg, 1 };
-  if (!suppress_errors()) {
+  int suppress_errors_ = suppress_errors(cmp);
+  if (!suppress_errors_) {
     check_basic(&ctx, &c, 0, data, n, sz);
     check_total_order(&ctx, &c, 0, data, n, sz);
   }
   _real(data, n, sz, cmp, arg);
-  if (!suppress_errors())
+  if (!suppress_errors_)
     check_uniqueness(&ctx, &c, data, n, sz);
 }
 
