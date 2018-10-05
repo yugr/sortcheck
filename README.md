@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/yugr/sortcheck.svg?branch=master)](https://travis-ci.org/yugr/sortcheck)
+
 # What is this?
 
 SortChecker is a tool for detecting violations
