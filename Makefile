@@ -14,11 +14,11 @@ else
   CFLAGS += -O0
 endif
 ifneq (,$(ASAN))
-  CFLAGS += -fsanitize=address
+  CFLAGS += -fsanitize=address -fsanitize-address-use-after-scope
   LDFLAGS += -Wl,--allow-shlib-undefined -fsanitize=address
 endif
 ifneq (,$(UBSAN))
-  CFLAGS += -fsanitize=undefined
+  CFLAGS += -fsanitize=undefined -fno-sanitize-recover=undefined
   LDFLAGS += -fsanitize=undefined
 endif
 LIBS = -ldl
