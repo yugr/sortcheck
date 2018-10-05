@@ -1,0 +1,10 @@
+language: c
+compiler:
+  - gcc
+  - clang
+env:
+  # TODO: add ASan (preload problem)
+  # TODO: add UBSan (not supported by Travis compiler)
+  matrix:
+    - OPTS=
+script: make CC=$CC $OPTS && make CC=$CC $OPTS check
