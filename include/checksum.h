@@ -8,7 +8,7 @@
 #ifndef CHECKSUM_H
 #define CHECKSUM_H
 
-#include <stdlib.h>
+#include <stddef.h>  // size_t
 
 // Fletcher's checksum
 unsigned checksum(const void *data, size_t sz);

@@ -8,7 +8,7 @@
 #ifndef PROC_INFO_H
 #define PROC_INFO_H
 
-#include <stdlib.h> // size_t
+#include <stddef.h> // size_t
 
 typedef struct {
   const void *begin_addr, *end_addr;

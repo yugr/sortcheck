@@ -11,8 +11,23 @@
 #include <io.h>
 #include <platform.h>
 
+// Predeclare exported functions to please Clang.
+
+typedef int (*cmp_fun_t)(const void *, const void *);
+typedef int (*cmp_r_fun_t)(const void *, const void *, void *);
+
+EXPORT void *bsearch(const void *key, const void *data, size_t n, size_t sz, cmp_fun_t cmp);
+EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_fun_t cmp);
+EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp);
+EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
+EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
+EXPORT void heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
+EXPORT void mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
+EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg);
+EXPORT void *dlopen(const char *filename, int flag);
+EXPORT int dlclose(void *handle);
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
@@ -21,6 +36,7 @@
 #include <errno.h>
 
 #include <dlfcn.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -273,9 +289,6 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
   if(flags.raise)
     raise(SIGTRAP);
 }
-
-typedef int (*cmp_fun_t)(const void *, const void *);
-typedef int (*cmp_r_fun_t)(const void *, const void *, void *);
 
 typedef struct {
   void *cmp;
