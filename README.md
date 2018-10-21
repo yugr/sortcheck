@@ -10,7 +10,7 @@ easy to violate one of the requirements. Such violations cause
 undefined behavior and may lead to all sorts of runtime
 errors in practice (including [unexpected results](https://groups.google.com/d/topic/golang-checkins/w4YWUgBhjJ0),
 [inconsistent results across different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html)
-or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)).
+or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)) (also see [here](https://stackoverflow.com/a/24048654/2170527) for some reasoning behind this).
 
 The tool works by intercepting qsort and friends through `LD_PRELOAD`
 and performing various checks prior to passing control to libc.
@@ -169,7 +169,8 @@ because it uses (inline) `std::sort` and `std::binary_search`
 compile-time instrumentation. This would also help with inline
 implementations of bsearch in modern Glibc.
 Here's a [discussion](http://lists.llvm.org/pipermail/llvm-dev/2016-January/093835.html)
-in LLVM mailing list.
+in LLVM mailing list which didn'unfortunately t go too far
+(but let me know if C++ solution would be of use for you).
 
 It may also make sense to check other popular sorting APIs:
 * `fts_open`, `scandir`
