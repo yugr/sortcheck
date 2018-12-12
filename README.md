@@ -12,10 +12,10 @@ errors in practice (including [unexpected results](https://groups.google.com/d/t
 [inconsistent results across different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html)
 or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)) (also see [here](https://stackoverflow.com/a/24048654/2170527) for some reasoning behind this).
 
-The tool works by intercepting qsort and friends through `LD_PRELOAD`
+The tool works by intercepting `qsort` and friends through `LD_PRELOAD`
 and performing various checks prior to passing control to libc.
 It could be applied to both C and C++ programs although for the
-latter std::sort and `std::binary_search` are more typical
+latter `std::sort` and `std::binary_search` are more typical
 (see [Future plans](#future-plans)).
 
 The tool is quite robust - I've successfully
@@ -54,7 +54,7 @@ distro or building C++ projects with a checked compiler.
 # Usage
 
 You do not need to rebuild your app to test it under SortChecker.
-Just run with preloaded libsortcheck.so:
+Just run with preloaded `libsortcheck.so`:
 
 ```
 $ LD_PRELOAD=libsortcheck.so myapp ...
@@ -63,7 +63,7 @@ $ LD_PRELOAD=libsortcheck.so myapp ...
 (you'll probably want to combine this with some kind of regression
 or random/fuzz testing to achieve good coverage).
 
-You could also use a helper script sortcheck to do this for you:
+You could also use a helper script `sortcheck` to do this for you:
 
 ```
 $ sortcheck myapp ...
@@ -75,7 +75,7 @@ To debug the issue, you can run with
 $ SORTCHECK_OPTIONS=raise=1 sortcheck myapp ...
 ```
 
-and then examine generated coredump in gdb.
+and then examine generated coredump in `gdb`.
 
 By default SortChecker enables a set of common checks which should
 be enough for most users. You can also customize it's behavior
@@ -142,13 +142,13 @@ You can run full Linux distro under SortChecker:
 Disclaimer: in this mode libsortcheck.so will be preloaded to
 all your processes so any malfunction may permanently break your
 system. It's highly recommended to backup the disk or make
-snapshot of VM.
+VM snapshot.
 
 # Build
 
 To build the tool, simply run make from project top directory.
 Makefile supports various candies (e.g. AddressSanitizer,
-debug build, etc.) - run make help for mode details.
+debug build, etc.) - run `make help` for mode details.
 
 If you enable AddressSanitizer you'll need to add libasan.so
 to `LD_PRELOAD` (before `libsortcheck.so`).
@@ -178,7 +178,7 @@ It may also make sense to check other popular sorting APIs:
 * Glib2's `g_qsort_with_data` and other users of GCompareFunc/GCompareDataFunc
 * Gnulib's `gl_listelement_compar_fn` and friends
 * Libiberty's `splay_tree` API
-* OpenSSL's objects.h API
+* OpenSSL's `objects.h` API
 * etc.
 
 Here's less high-level stuff (sorted by priority):
