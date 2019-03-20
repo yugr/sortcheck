@@ -4,11 +4,11 @@
 
 SortChecker is a tool for detecting violations
 of [ordering axioms](http://pubs.opengroup.org/onlinepubs/009695399/functions/qsort.html)
-in comparison functions passed to qsort
+in comparison functions passed to `qsort`
 (also `bsearch`, `lfind`, etc.). For complex data structures it's very
 easy to violate one of the requirements. Such violations cause
 undefined behavior and may lead to all sorts of runtime
-errors in practice (including [unexpected results](https://groups.google.com/d/topic/golang-checkins/w4YWUgBhjJ0),
+errors (including [unexpected results](https://groups.google.com/d/topic/golang-checkins/w4YWUgBhjJ0),
 [inconsistent results across different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html)
 or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)) (also see [here](https://stackoverflow.com/a/24048654/2170527) for some reasoning behind this).
 
