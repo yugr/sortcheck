@@ -24,10 +24,10 @@ enum CheckFlags {
 };
 
 typedef struct {
-  char debug : 1;
-  char report_error : 1;
-  char print_to_syslog : 1;
-  char raise : 1;
+  unsigned char debug : 1;
+  unsigned char report_error : 1;
+  unsigned char print_to_syslog : 1;
+  unsigned char raise : 1;
   unsigned max_errors;
   unsigned sleep;
   unsigned checks;
