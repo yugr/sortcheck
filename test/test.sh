@@ -1,11 +1,15 @@
 #!/bin/sh
 
-# Copyright 2015-2016 Yury Gribov
+# Copyright 2015-2019 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
 set -eu
+
+if test -n "${TRAVIS:-}"; then
+  set -x
+fi
 
 cd $(dirname $0)/..
 
@@ -40,10 +44,23 @@ export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check
 # Get rid of "ASan runtime does not come first in initial library list"
 ASAN_OPTIONS=verify_asan_link_order=0:$ASAN_OPTIONS
 
+CC=${CC:-gcc}
+
+if ldd bin/libsortcheck.so | grep -q asan; then
+  if echo "$CC" | grep -q gcc; then
+    ASAN_RT_LIB=libasan.so
+  else  # clang
+    ASAN_RT_LIB=libclang_rt.asan-x86_64.so
+  fi
+  ASAN_PRELOAD=$($CC -print-file-name=$ASAN_RT_LIB)
+else
+  ASAN_PRELOAD=
+fi
+
 for t in test/*.c; do
   failed=
 
-  if ! gcc $t -Itest $(get_option $t CFLAGS) -o bin/a.out; then
+  if ! $CC $t -Itest $(get_option $t CFLAGS) -o bin/a.out; then
     error "$t: compilation failed"
     failed=1
   fi
@@ -65,7 +82,7 @@ for t in test/*.c; do
 
   get_syslog > bin/syslog.bak
 
-  if ! LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}bin/libsortcheck.so bin/a.out $ARGS 2>bin/a.out.log; then
+  if ! LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}${ASAN_PRELOAD:+$ASAN_PRELOAD:}bin/libsortcheck.so bin/a.out $ARGS 2>bin/a.out.log; then
     error "$t: test exited with a non-zero exit code"
     failed=1
   elif ! has_option $t CHECK && ! has_option $t CHECK-NOT && test -s bin/a.out.log; then
