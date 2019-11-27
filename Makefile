@@ -3,7 +3,7 @@
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
-CC = gcc
+CC ?= gcc
 CPPFLAGS = -D_GNU_SOURCE -Iinclude
 CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
 LDFLAGS = -fPIC -shared -Wl,--no-allow-shlib-undefined
@@ -20,6 +20,8 @@ endif
 ifneq (,$(UBSAN))
   CFLAGS += -fsanitize=undefined -fno-sanitize-recover=undefined
   LDFLAGS += -fsanitize=undefined
+  # Use Gold to avoid "unrecognized option --push-state--no-as-needed" from ld
+  LDFLAGS += -fuse-ld=gold
 endif
 LIBS = -ldl
 

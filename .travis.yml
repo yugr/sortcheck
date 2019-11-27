@@ -1,10 +1,37 @@
+# TODO:
+# * clang-asan, clang-ubsan
+# * valgrind
+# * coverage
+# * CSA
+
 language: c
-compiler:
-  - gcc
-  - clang
-env:
-  # TODO: add ASan (preload problem)
-  # TODO: add UBSan (not supported by Travis compiler)
-  matrix:
-    - OPTS=
-script: make CC=$CC $OPTS && make CC=$CC $OPTS check
+os: linux
+script: make $OPTS && make $OPTS check
+jobs:
+  include:
+    - stage: baseline
+      name: gcc
+      compiler: gcc
+    - name: clang
+      compiler: clang
+    - stage: checkers
+      name: gcc-asan
+      compiler: gcc-9
+      env:
+        - OPTS="ASAN=1"
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - gcc-9
+    - name: gcc-ubsan
+      compiler: gcc-9
+      env:
+        - OPTS="UBSAN=1"
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - gcc-9
