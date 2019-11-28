@@ -75,7 +75,7 @@ help:
 	@echo "  UBSAN=1       Build with UBSan checks."
 
 clean:
-	rm -f bin/*
+	rm -f bin/* *.gcov
 
 .PHONY: clean all install check FORCE help
 

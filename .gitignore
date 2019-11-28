@@ -2,3 +2,4 @@ core
 bin/*
 .*.swp
 tags
+*.gcov
