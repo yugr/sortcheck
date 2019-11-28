@@ -1,12 +1,10 @@
 # TODO:
-# * clang-asan, clang-ubsan
 # * valgrind
-# * coverage
 # * CSA
 
 language: c
 os: linux
-script: make $OPTS && make $OPTS check
+script: scripts/travis.sh $OPTS
 jobs:
   include:
     - stage: baseline
@@ -35,3 +33,8 @@ jobs:
             - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
             - gcc-9
+    - stage: coverage
+      name: gcc-coverage
+      env:
+        - COVERAGE=1
+        - CODECOV_TOKEN="3a97a9de-16f9-4a37-80b4-9e853f0994f1"

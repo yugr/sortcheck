@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/yugr/sortcheck.svg?branch=master)](https://travis-ci.org/yugr/sortcheck)
+[![Codecov coverage](https://img.shields.io/codecov/c/github/yugr/sortcheck.svg)](https://codecov.io/gh/yugr/sortcheck)
 
 # What is this?
 

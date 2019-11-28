@@ -23,6 +23,11 @@ ifneq (,$(UBSAN))
   # Use Gold to avoid "unrecognized option --push-state--no-as-needed" from ld
   LDFLAGS += -fuse-ld=gold
 endif
+ifneq (,$(COVERAGE))
+  DEBUG = 1
+  CFLAGS += -O0 -DNDEBUG --coverage
+  LDFLAGS += --coverage
+endif
 LIBS = -ldl
 
 DESTDIR = /usr
