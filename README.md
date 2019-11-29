@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/yugr/sortcheck.svg?branch=master)](https://travis-ci.org/yugr/sortcheck)
 [![Codecov coverage](https://img.shields.io/codecov/c/github/yugr/sortcheck.svg)](https://codecov.io/gh/yugr/sortcheck)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/yugr/sortcheck.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yugr/sortcheck/alerts/)
 
 # What is this?
 
