@@ -288,6 +288,8 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
 
   if(flags.raise)
     raise(SIGTRAP);
+
+  va_end(ap);
 }
 
 typedef struct {
