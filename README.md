@@ -177,6 +177,7 @@ in LLVM mailing list which didn'unfortunately t go too far
 (but let me know if C++ solution would be of use for you).
 
 It may also make sense to check other popular sorting APIs:
+* `qsort_s`, `bsearch_s` (are they availabile/used?)
 * `fts_open`, `scandir`
 * Berkeley DB's `set_bt_compare`, `set_dup_compare`, etc.
 * Glib2's `g_qsort_with_data` and other users of GCompareFunc/GCompareDataFunc
