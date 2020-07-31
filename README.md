@@ -14,7 +14,7 @@ easy to violate one of the requirements. Such violations cause
 undefined behavior and may lead to all sorts of runtime
 errors (including [unexpected results](https://groups.google.com/d/topic/golang-checkins/w4YWUgBhjJ0),
 [inconsistent results across different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html)
-or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)) (also see [here](https://stackoverflow.com/a/24048654/2170527) for some reasoning behind this).
+or even [aborts](https://bugzilla.samba.org/show_bug.cgi?id=3959)) (also [here](https://stackoverflow.com/questions/2441045/bewildering-segfault-involving-stl-sort-algorithm), see [this answer](https://stackoverflow.com/a/24048654/2170527) for explanations).
 
 The tool works by intercepting `qsort` and friends through `LD_PRELOAD`
 and performing various checks prior to passing control to libc.
