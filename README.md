@@ -190,4 +190,5 @@ Here's less high-level stuff (sorted by priority):
 * ensure that code is thread-safe (may need lots of platform-dependent code for atomics...)
 * print complete backtrace rather than just address of caller (libunwind?)
 * print array elements which triggered errors (i.e. hex dumps)
+* use random array subsets for testing
 * other minor TODO/FIXME are scattered all over the codebase
