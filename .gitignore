@@ -3,3 +3,4 @@ bin/*
 .*.swp
 tags
 *.gcov
+.gdb_history
