@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2019 Yury Gribov
+# Copyright 2015-2021 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -100,7 +100,7 @@ for t in test/*.c; do
     get_option $t CHECK-NOT > bin/checknots.txt
     while read checknot; do
       if grep -q "$checknot" bin/a.out.log; then
-        error "$t: output matches prohibited pattern '$check'"
+        error "$t: output matches prohibited pattern '$checknot'"
         failed=1
       fi
     done < bin/checknots.txt

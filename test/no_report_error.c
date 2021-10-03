@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Yury Gribov
+ * Copyright 2015-2021 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -10,7 +10,7 @@
 char aa[] = { 1, 2, 3 };
 
 // OPTS: report_error=0
-// CHECK-NOT: qsort: .* (called from
+// CHECK-NOT: qsort: .* called from
 int cmp(const void *pa, const void *pb) {
   static int x;
   return x++ % 2;
