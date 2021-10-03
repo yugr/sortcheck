@@ -129,6 +129,8 @@ available options are
   inappropriately.
   * for each option `XYZ` there's a dual `no_XYZ` (which disables
   corresponding check)
+* `start` - check the `start`-th group of 32 leading elements (default 0);
+  a value of `rand` will select random group.
 
 # Applying to full distribution
 
@@ -137,11 +139,14 @@ You can run full Linux distro under SortChecker:
 * create a global config:
 
   ```
-  $ echo print_to_syslog=1:check=default | sudo tee /SORTCHECK_OPTIONS 
+  $ echo print_to_syslog=1:check=default:start=rand | sudo tee /SORTCHECK_OPTIONS 
   $ sudo chmod a+r /SORTCHECK_OPTIONS
   ```
 
 * reboot
+
+Due to randomized order of checks it makes sense to check for errors and
+reboot several times to detect more errors.
 
 Disclaimer: in this mode libsortcheck.so will be preloaded to
 all your processes so any malfunction may permanently break your

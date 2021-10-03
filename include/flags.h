@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 Yury Gribov
+ * Copyright 2015-2021 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -31,6 +31,7 @@ typedef struct {
   unsigned max_errors;
   unsigned sleep;
   unsigned checks;
+  unsigned start;
   const char *out_filename;
 } Flags;
 

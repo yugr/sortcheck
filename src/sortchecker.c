@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 Yury Gribov
+ * Copyright 2015-2021 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -51,6 +51,7 @@ static Flags flags = {
   /*max_errors*/ 10,
   /*sleep*/ 0,
   /*checks*/ CHECK_DEFAULT,
+  /*start*/ 0,
   /*out_filename*/ 0
 };
 
@@ -416,21 +417,23 @@ static void check_total_order(ErrorContext *ctx, const Comparator *cmp, const ch
   // TODO: 2 bits enough for status
   // TODO: randomize selection of sub-array (and print seed in error message for repro)
   int8_t cmp_[32][32];
-  n = n > 32 ? 32 : n;
+  unsigned start = flags.start % n;
+  unsigned end = n > start + 32u ? start + 32u : n;
+  n = end - start;
   memset(cmp_, 0, sizeof(cmp_));
 
   size_t i, j, k;
-  for(i = 0; i < n; ++i)
-  for(j = 0; j < n; ++j) {
+  for(i = start; i < end; ++i)
+  for(j = start; j < end; ++j) {
     const void *a = (const char *)data + i * sz;
     const void *b = (const char *)data + j * sz;
     if(i == j && !(flags.checks & CHECK_REFLEXIVITY)) {
       // Do not call cmp(x,x) unless explicitly asked by user
       // because some projects assert on self-comparisons (e.g. GCC)
-      cmp_[i][j] = 0;
+      cmp_[i - start][j - start] = 0;
       continue;
     }
-    cmp_[i][j] = sign(cmp_eval(cmp, a, b));
+    cmp_[i - start][j - start] = sign(cmp_eval(cmp, a, b));
   }
 
   // Following axioms from http://mathworld.wolfram.com/StrictOrder.html
