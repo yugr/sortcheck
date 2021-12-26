@@ -1,0 +1,58 @@
+# TODO:
+# * checkers: sanitizers, valgrind, CSA
+
+name: CI
+on:
+  push:
+    paths-ignore:
+    - 'LICENSE.txt'
+    - 'README.md'
+  pull_request:
+    paths-ignore:
+    - 'LICENSE.txt'
+    - 'README.md'
+jobs:
+  Tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04, ubuntu-latest]
+        cc: [gcc, clang]
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: ${{ matrix.cc }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: scripts/travis.sh
+  Asan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: scripts/travis.sh OPTS=ASAN=1
+  UBsan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: scripts/travis.sh OPTS=UBSAN=1
+  Coverage:
+    runs-on: ubuntu-latest
+    environment: secrets
+    env:
+      COVERAGE: 1
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: scripts/travis.sh
+  Coverity:
+    runs-on: ubuntu-latest
+    environment: secrets
+    steps:
+    - uses: actions/checkout@v2
+    - uses: vapier/coverity-scan-action@v0
+      with:
+        project: yugr%2Fsortcheck
+        token: ${{ secrets.COVERITY_SCAN_TOKEN }}

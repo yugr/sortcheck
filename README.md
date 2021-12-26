@@ -1,5 +1,5 @@
 [![License](http://img.shields.io/:license-MIT-blue.svg)](https://github.com/yugr/sortcheck/blob/master/LICENSE.txt)
-[![Build Status](https://travis-ci.org/yugr/sortcheck.svg?branch=master)](https://travis-ci.org/yugr/sortcheck)
+[![Build Status](https://github.com/yugr/sortcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/yugr/sortcheck/actions)
 [![Codecov coverage](https://img.shields.io/codecov/c/github/yugr/sortcheck.svg)](https://codecov.io/gh/yugr/sortcheck)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/yugr/sortcheck.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yugr/sortcheck/alerts/)
 [![Coverity Scan](https://scan.coverity.com/projects/19944/badge.svg)](https://scan.coverity.com/projects/yugr-sortcheck)
