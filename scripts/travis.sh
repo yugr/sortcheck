@@ -13,7 +13,7 @@ fi
 
 cd $(dirname $0)/..
 
-make "$@"
+make "$@" clean all
 make "$@" check
 
 # Upload coverage
