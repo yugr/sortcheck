@@ -1,12 +1,20 @@
-# Copyright 2015-2019 Yury Gribov
+# Copyright 2015-2021 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
 
 CC ?= gcc
+
 CPPFLAGS = -D_GNU_SOURCE -Iinclude
 CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
 LDFLAGS = -fPIC -shared -Wl,--no-allow-shlib-undefined
+LIBS = -ldl
+
+ifneq (,$(COVERAGE))
+  DEBUG = 1
+  CFLAGS += --coverage -DNDEBUG
+  LDFLAGS += --coverage
+endif
 ifeq (,$(DEBUG))
   CFLAGS += -O2
   LDFLAGS += -Wl,-O2
@@ -23,12 +31,6 @@ ifneq (,$(UBSAN))
   # Use Gold to avoid "unrecognized option --push-state--no-as-needed" from ld
   LDFLAGS += -fuse-ld=gold
 endif
-ifneq (,$(COVERAGE))
-  DEBUG = 1
-  CFLAGS += -O0 -DNDEBUG --coverage
-  LDFLAGS += --coverage
-endif
-LIBS = -ldl
 
 DESTDIR = /usr
 
