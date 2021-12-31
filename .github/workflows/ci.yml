@@ -56,3 +56,4 @@ jobs:
       with:
         project: yugr%2Fsortcheck
         token: ${{ secrets.COVERITY_SCAN_TOKEN }}
+        email: ${{ secrets.EMAIL }}
