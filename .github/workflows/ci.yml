@@ -37,6 +37,16 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run tests
       run: scripts/travis.sh OPTS=UBSAN=1
+  Valgrind:
+    runs-on: ubuntu-latest
+    env:
+      VALGRIND: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: sudo apt-get install valgrind
+    - name: Run tests
+      run: scripts/travis.sh
   Coverage:
     needs: Tests
     runs-on: ubuntu-latest

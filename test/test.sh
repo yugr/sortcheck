@@ -57,6 +57,11 @@ else
   ASAN_PRELOAD=
 fi
 
+VALGRIND=${VALGRIND:-}
+if test -n "${VALGRIND:-}"; then
+  VALGRIND='valgrind -q'
+fi
+
 for t in test/*.c; do
   failed=
 
@@ -82,7 +87,7 @@ for t in test/*.c; do
 
   get_syslog > bin/syslog.bak
 
-  if ! LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}${ASAN_PRELOAD:+$ASAN_PRELOAD:}bin/libsortcheck.so bin/a.out $ARGS 2>bin/a.out.log; then
+  if ! LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}${ASAN_PRELOAD:+$ASAN_PRELOAD:}bin/libsortcheck.so $VALGRIND bin/a.out $ARGS 2>bin/a.out.log; then
     error "$t: test exited with a non-zero exit code"
     failed=1
   elif ! has_option $t CHECK && ! has_option $t CHECK-NOT && test -s bin/a.out.log; then
