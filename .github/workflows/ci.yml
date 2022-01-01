@@ -38,6 +38,7 @@ jobs:
     - name: Run tests
       run: scripts/travis.sh OPTS=UBSAN=1
   Coverage:
+    needs: Tests
     runs-on: ubuntu-latest
     environment: secrets
     env:
@@ -48,6 +49,7 @@ jobs:
     - name: Run tests
       run: scripts/travis.sh
   Coverity:
+    needs: Tests
     runs-on: ubuntu-latest
     environment: secrets
     steps:
