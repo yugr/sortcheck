@@ -46,13 +46,13 @@ ASAN_OPTIONS=verify_asan_link_order=0:$ASAN_OPTIONS
 
 CC=${CC:-gcc}
 
-if ldd bin/libsortcheck.so | grep -q asan; then
-  if echo "$CC" | grep -q gcc; then
-    ASAN_RT_LIB=libasan.so
-  else  # clang
+if readelf --dyn-syms -W bin/libsortcheck.so | grep -q __asan_init; then
+  if $CC --version | grep -q clang; then
     ASAN_RT_LIB=libclang_rt.asan-x86_64.so
+  else  # clang
+    ASAN_RT_LIB=libasan.so
   fi
-  ASAN_PRELOAD=$($CC -print-file-name=$ASAN_RT_LIB)
+  ASAN_PRELOAD=$($CC --print-file-name=$ASAN_RT_LIB)
 else
   ASAN_PRELOAD=
 fi
