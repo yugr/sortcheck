@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2021 Yury Gribov
+# Copyright 2015-2022 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -59,7 +59,7 @@ fi
 
 VALGRIND=${VALGRIND:-}
 if test -n "${VALGRIND:-}"; then
-  VALGRIND='valgrind -q'
+  VALGRIND='valgrind -q --error-exitcode=1'
 fi
 
 for t in test/*.c; do
