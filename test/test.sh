@@ -33,7 +33,7 @@ get_syslog() {
     cat /var/log/syslog
   else
     journalctl -q
-  fi | grep a.out.*qsort
+  fi | grep a.out.*qsort || true
 }
 
 # From https://github.com/google/sanitizers/wiki/AddressSanitizer
