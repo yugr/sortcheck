@@ -13,6 +13,8 @@ fi
 
 cd $(dirname $0)/..
 
+export ASAN_OPTIONS='detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1'
+
 make "$@" clean all
 make "$@" check
 

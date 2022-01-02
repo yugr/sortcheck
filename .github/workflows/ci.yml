@@ -27,16 +27,22 @@ jobs:
       run: scripts/travis.sh
   Asan:
     runs-on: ubuntu-latest
+    env:
+      CC: gcc  # Clang's interceptor runs comparator prior to our interceptor and ruins some tests
+      ASAN: 1
     steps:
     - uses: actions/checkout@v2
     - name: Run tests
-      run: scripts/travis.sh OPTS=ASAN=1
+      run: scripts/travis.sh
   UBsan:
     runs-on: ubuntu-latest
+    env:
+      CC: clang
+      UBSAN: 1
     steps:
     - uses: actions/checkout@v2
     - name: Run tests
-      run: scripts/travis.sh OPTS=UBSAN=1
+      run: scripts/travis.sh
   Valgrind:
     runs-on: ubuntu-latest
     env:
