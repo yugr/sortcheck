@@ -26,12 +26,12 @@ ifneq (,$(ASAN))
   LDFLAGS += -Wl,--allow-shlib-undefined -fsanitize=address
 endif
 ifneq (,$(UBSAN))
-	ifneq (,$(shell $(CXX) --version | grep clang))
+	ifneq (,$(shell $(CC) --version | grep clang))
 	# Isan is clang-only...
-  CXXFLAGS += -fsanitize=undefined,integer -fno-sanitize-recover=undefined,integer
+  CFLAGS += -fsanitize=undefined,integer -fno-sanitize-recover=undefined,integer
   LDFLAGS += -fsanitize=undefined,integer -fno-sanitize-recover=undefined,integer
   else
-  CXXFLAGS += -fsanitize=undefined -fno-sanitize-recover=undefined
+  CFLAGS += -fsanitize=undefined -fno-sanitize-recover=undefined
   LDFLAGS += -fsanitize=undefined -fno-sanitize-recover=undefined
 	endif
   # Use Gold to avoid "unrecognized option --push-state--no-as-needed" from ld
