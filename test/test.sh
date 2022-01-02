@@ -29,9 +29,7 @@ get_option() {
 }
 
 get_syslog() {
-  if test -n "${TRAVIS:-}"; then
-    :
-  elif test -f /var/log/syslog; then
+  if test -r /var/log/syslog; then
     cat /var/log/syslog
   else
     journalctl -q
@@ -80,7 +78,7 @@ for t in test/*.c; do
   else
     ARGS=
   fi
-  if has_option $t SYSLOG && test -n "${TRAVIS:-}"; then
+  if has_option $t SYSLOG; then
     echo "Skipping syslog test $t in Travis environment"
     continue
   fi
