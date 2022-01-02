@@ -7,7 +7,7 @@
 
 set -eu
 
-if test -n "${TRAVIS:-}"; then
+if test -n "${TRAVIS:-}" -o -n "${GITHUB_ACTIONS:-}"; then
   set -x
 fi
 
