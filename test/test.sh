@@ -35,7 +35,7 @@ get_syslog() {
     cat /var/log/syslog
   else
     journalctl -q
-  fi
+  fi | grep a.out.*qsort
 }
 
 # From https://github.com/google/sanitizers/wiki/AddressSanitizer
@@ -94,6 +94,8 @@ for t in test/*.c; do
     error "$t: non-empty stderr"
     failed=1
   else
+    get_syslog > bin/syslog
+
     get_option $t CHECK > bin/checks.txt
     while read check; do
       if ! grep -q "$check" bin/a.out.log; then
@@ -114,7 +116,6 @@ for t in test/*.c; do
   if has_option $t SYSLOG || has_option $t SYSLOG-NOT; then
     get_option $t SYSLOG > bin/syslog_checks.txt
     while read check; do
-      get_syslog > bin/syslog
       if ! comm -13 bin/syslog.bak bin/syslog | grep -q "$check"; then
         error "$t: syslog does not match pattern '$check'"
         failed=1
@@ -123,7 +124,6 @@ for t in test/*.c; do
 
     get_option $t SYSLOG-NOT > bin/syslog_checknots.txt
     while read checknot; do
-      get_syslog > bin/syslog
       if comm -13 bin/syslog.bak bin/syslog | grep -q "$check"; then
         error "$t: syslog matches prohibited pattern '$check'"
         failed=1
