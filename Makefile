@@ -83,7 +83,8 @@ help:
 	@echo "  UBSAN=1       Build with UBSan checks."
 
 clean:
-	rm -f bin/* *.gcov
+	rm -f bin/*
+	find -name \*.gcov -o -name \*.gcno -o -name \*.gcda | xargs rm -rf
 
 .PHONY: clean all install check FORCE help
 
