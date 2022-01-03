@@ -39,7 +39,7 @@ ProcMap *get_proc_maps(size_t *n) {
   FILE *p = fopen("/proc/self/maps", "rb");
   if(!p) {
     *n = 0;
-    return 0;
+    return NULL;
   }
 
   size_t max_maps = 50;
@@ -116,6 +116,6 @@ const ProcMap *find_proc_map_for_addr(const ProcMap *maps, size_t n, const void 
   for(i = 0; i < n; ++i)
     if(maps[i].begin_addr <= addr && addr < maps[i].end_addr)
       return &maps[i];
-  return 0;
+  return NULL;
 }
 

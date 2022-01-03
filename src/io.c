@@ -16,7 +16,7 @@ char *read_file(const char *fname, size_t *plen) {
 
   FILE *p = fopen(fname, "rb");
   if(!p)
-    return 0;
+    return NULL;
 
   size_t bufsize = 128, len = 0;
   char *res = malloc(bufsize);
