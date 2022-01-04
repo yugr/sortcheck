@@ -78,10 +78,6 @@ for t in test/*.c; do
   else
     ARGS=
   fi
-  if has_option $t SYSLOG; then
-    echo "Skipping syslog test $t in Travis environment"
-    continue
-  fi
 
   get_syslog > bin/syslog.bak
 
