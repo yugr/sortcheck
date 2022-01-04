@@ -51,7 +51,7 @@ install:
 	install -D scripts/sortcheck $(DESTDIR)/bin
 
 check:
-	test/test.sh
+	tests/test.sh
 
 bin/libsortcheck.so: $(OBJS) bin/FLAGS Makefile
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@

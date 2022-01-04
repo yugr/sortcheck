@@ -60,7 +60,7 @@ if test -n "${VALGRIND:-}"; then
   VALGRIND='valgrind -q --error-exitcode=1'
 fi
 
-for t in test/*.c; do
+for t in tests/*.c; do
   failed=
 
   if ! $CC $t -Itest $(get_option $t CFLAGS) -o bin/a.out; then
