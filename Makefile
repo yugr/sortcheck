@@ -7,7 +7,7 @@ CC ?= gcc
 
 CPPFLAGS = -D_GNU_SOURCE -Iinclude
 CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
-LDFLAGS = -fPIC -shared -Wl,--no-allow-shlib-undefined
+LDFLAGS = -fPIC -shared -Wl,--no-allow-shlib-undefined -Wl,--warn-common
 LIBS = -ldl
 
 ifneq (,$(COVERAGE))
