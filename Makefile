@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file.
 
 CC ?= gcc
+DESTDIR ?= /usr/local
 
 CPPFLAGS = -D_GNU_SOURCE -Iinclude
 CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
@@ -38,8 +39,6 @@ ifneq (,$(UBSAN))
   LDFLAGS += -fuse-ld=gold
 endif
 
-DESTDIR = /usr
-
 OBJS = bin/sortchecker.o bin/proc_info.o bin/checksum.o bin/io.o bin/flags.o
 
 $(shell mkdir -p bin)
@@ -47,6 +46,7 @@ $(shell mkdir -p bin)
 all: bin/libsortcheck.so
 
 install:
+	mkdir -p $(DESTDIR)
 	install -D bin/libsortcheck.so $(DESTDIR)/lib
 	install -D scripts/sortcheck $(DESTDIR)/bin
 
