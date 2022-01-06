@@ -1,5 +1,5 @@
 # TODO:
-# * checkers: sanitizers, valgrind, CSA
+# * checkers: CSA
 
 name: CI
 on:
@@ -66,14 +66,3 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run tests
       run: scripts/travis.sh
-  Coverity:
-    needs: Tests
-    runs-on: ubuntu-latest
-    environment: secrets
-    steps:
-    - uses: actions/checkout@v2
-    - uses: vapier/coverity-scan-action@v0
-      with:
-        project: yugr%2Fsortcheck
-        token: ${{ secrets.COVERITY_SCAN_TOKEN }}
-        email: ${{ secrets.EMAIL }}
