@@ -18,8 +18,11 @@ export ASAN_OPTIONS='detect_stack_use_after_return=1:check_initialization_order=
 make "$@" clean all
 make "$@" check
 
-# Upload coverage
 if test -n "${COVERAGE:-}"; then
+  # Collect DLL coverage
+  mv bin/*.gc[dn][ao] src
+  gcov src/*.gcno
+  # Upload coverage
   curl --retry 5 -s https://codecov.io/bash > codecov.bash
   bash codecov.bash -Z
 fi

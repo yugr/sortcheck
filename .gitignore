@@ -1,6 +1,16 @@
-core
+# Binaries
 bin/*
-.*.swp
+
+# Vim files
+.*swp
 tags
-*.gcov
+
+# GDB files
+core
 .gdb_history
+
+$ Test files
+*.gcov
+*.gcda
+*.gcno
+a.out

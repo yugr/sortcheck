@@ -130,9 +130,5 @@ for t in tests/*.c; do
   fi
 done
 
-if readelf -sW bin/libsortcheck.so | grep -q gcov_error; then
-  gcov -o bin src/*.c
-fi
-
 echo "Total: $num_errors errors"
 test $num_errors = 0 || exit 1
