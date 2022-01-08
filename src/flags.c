@@ -44,7 +44,9 @@ int parse_flags(char *opt, Flags *flags) {
     } else if(0 == strcmp(name, "report_error")) {
       flags->report_error = atoi(value);
     } else if(0 == strcmp(name, "max_errors")) {
-      flags->max_errors = atoi(value);
+      int max_errors = atoi(value);
+      if (max_errors >= 0)
+        flags->max_errors = max_errors < 1024 ? max_errors : 1024;;
     } else if(0 == strcmp(name, "raise")) {
       flags->raise = atoi(value);
     } else if(0 == strcmp(name, "sleep")) {
