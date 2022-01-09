@@ -37,7 +37,7 @@ get_syslog() {
 }
 
 # From https://github.com/google/sanitizers/wiki/AddressSanitizer
-export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
+export ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:strict_string_checks=1
 
 # Get rid of "ASan runtime does not come first in initial library list"
 ASAN_OPTIONS=verify_asan_link_order=0:$ASAN_OPTIONS
