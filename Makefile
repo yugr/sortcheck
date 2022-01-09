@@ -60,8 +60,8 @@ bin/%.o: src/%.c Makefile bin/FLAGS
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 bin/FLAGS: FORCE
-	if test x"$(CFLAGS) $(LDFLAGS)" != x"$$(cat $@)"; then \
-		echo "$(CFLAGS) $(LDFLAGS)" > $@; \
+	if test x"$(CFLAGS) $(CXXFLAGS) $(LDFLAGS)" != x"$$(cat $@)"; then \
+		echo "$(CFLAGS) $(CXXFLAGS) $(LDFLAGS)" > $@; \
 	fi
 
 # TODO: add depend target
