@@ -20,7 +20,8 @@ The tool works by intercepting `qsort` and friends through `LD_PRELOAD`
 and performing various checks prior to passing control to libc.
 It could be applied to both C and C++ programs although for the
 latter `std::sort` and `std::binary_search` are more typical
-(see [Future plans](#future-plans)).
+(use my [SortChecker++](https://github.com/yugr/sortcheckxx) tool
+to diagnose errors in them).
 
 The tool is quite robust - I've successfully
 booted stock Ubuntu 14, Fedora 22 and Debian chroot and bootstrapped
@@ -174,12 +175,13 @@ tested SortChecker on Ubuntu and Fedora.
 
 The tool only supports C now which rules out most of C++ code
 because it uses (inline) `std::sort` and `std::binary_search`
-(and other similar APIs). To check C++, we need a simple
-compile-time instrumentation. This would also help with inline
-implementations of bsearch in modern Glibc.
-Here's a [discussion](http://lists.llvm.org/pipermail/llvm-dev/2016-January/093835.html)
-in LLVM mailing list which didn'unfortunately t go too far
-(but let me know if C++ solution would be of use for you).
+(and other similar APIs). For those see another tool
+[SortChecker++](https://github.com/yugr/sortcheckxx)
+which does a simple compile-time instrumentation via Clang.
+
+It would be great to make SortChecker a part of standard debuggin tool
+like UBsan. Here's a [discussion](http://lists.llvm.org/pipermail/llvm-dev/2016-January/093835.html)
+in LLVM mailing list which unfortunately didn't go too far.
 
 It may also make sense to check other popular sorting APIs:
 * `qsort_s`, `bsearch_s` (are they availabile/used?)
