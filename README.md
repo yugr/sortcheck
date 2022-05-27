@@ -130,8 +130,11 @@ available options are
   inappropriately.
   * for each option `XYZ` there's a dual `no_XYZ` (which disables
   corresponding check)
-* `start` - check the `start`-th group of 32 leading elements (default 0);
+* `seed` - use fixed seed for internal random generator
+  which determines the 32-element subset that will be verified
   a value of `rand` will select random group.
+* `extent` - check that many elements (instead of default 32)
+* `start` - check the `start`-th group of `extent` leading elements (overrides seed)
 
 # Applying to full distribution
 
@@ -196,6 +199,4 @@ It may also make sense to check other popular sorting APIs:
 Here's less high-level stuff (sorted by priority):
 * ensure that code is thread-safe (may need lots of platform-dependent code for atomics...)
 * print complete backtrace rather than just address of caller (libunwind?)
-* print array elements which triggered errors (i.e. hex dumps)
-* use random array subsets for testing
 * other minor TODO/FIXME are scattered all over the codebase

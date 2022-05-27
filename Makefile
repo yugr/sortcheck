@@ -1,4 +1,4 @@
-# Copyright 2015-2021 Yury Gribov
+# Copyright 2015-2022 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -39,7 +39,7 @@ ifneq (,$(UBSAN))
   LDFLAGS += -fuse-ld=gold
 endif
 
-OBJS = bin/sortchecker.o bin/proc_info.o bin/checksum.o bin/io.o bin/flags.o
+OBJS = bin/sortchecker.o bin/proc_info.o bin/checksum.o bin/io.o bin/flags.o bin/random.o
 
 $(shell mkdir -p bin)
 

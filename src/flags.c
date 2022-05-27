@@ -1,17 +1,27 @@
 /*
- * Copyright 2015-2021 Yury Gribov
+ * Copyright 2015-2022 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
  */
 
 #include <flags.h>
+#include <random.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/time.h>
+
 int parse_flags(char *opt, Flags *flags) {
+  struct timeval tv;
+  if (0 != gettimeofday(&tv, 0)) {
+    fprintf(stderr, "sortcheck: gettimeofday failed\n");
+    return 0;
+  }
+  random_reseed((unsigned long)tv.tv_usec);
+
   // Skip parasite newlines inserted by some editors
   size_t newline = strcspn(opt, "\r\n");
   opt[newline] = 0;
@@ -51,6 +61,10 @@ int parse_flags(char *opt, Flags *flags) {
       flags->raise = atoi(value);
     } else if(0 == strcmp(name, "sleep")) {
       flags->sleep = atoi(value);
+    } else if(0 == strcmp(name, "start")) {
+      flags->start = atoi(value);
+    } else if(0 == strcmp(name, "extent")) {
+      flags->extent = atoi(value);
     } else if(0 == strcmp(name, "check")) {
       unsigned checks = 0;
       do {
@@ -85,9 +99,8 @@ int parse_flags(char *opt, Flags *flags) {
         value = next;
       } while(value);
       flags->checks = checks;
-    } else if(0 == strcmp(name, "start")) {
-      int random = 0 == strcmp(name, "rand") || 0 == strcmp(name, "random");
-      flags->start = (unsigned)(random ? rand() : atoi(value));
+    } else if(0 == strcmp(name, "seed")) {
+      random_reseed((unsigned long)atoi(value));
     } else {
       fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
       return 0;

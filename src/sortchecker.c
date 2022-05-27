@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 Yury Gribov
+ * Copyright 2015-2022 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -10,6 +10,7 @@
 #include <flags.h>
 #include <io.h>
 #include <platform.h>
+#include <random.h>
 
 // Predeclare exported functions to please Clang.
 
@@ -51,7 +52,8 @@ static Flags flags = {
   /*max_errors*/ 10,
   /*sleep*/ 0,
   /*checks*/ CHECK_DEFAULT,
-  /*start*/ 0,
+  /*start*/ -1,
+  /*extent*/ 32,
   /*out_filename*/ 0
 };
 
@@ -414,26 +416,16 @@ static void check_total_order(ErrorContext *ctx, const Comparator *cmp, const ch
   if(key && !(flags.checks & CHECK_GOOD_BSEARCH))
     return;
 
-  // TODO: 2 bits enough for status
-  // TODO: randomize selection of sub-array (and print seed in error message for repro)
-  int8_t cmp_[32][32];
-  unsigned start = flags.start % n;
-  unsigned end = n > start + 32u ? start + 32u : n;
-  n = end - start;
-  memset(cmp_, 0, sizeof(cmp_));
-
   size_t i, j, k;
-  for(i = start; i < end; ++i)
-  for(j = start; j < end; ++j) {
-    const void *a = (const char *)data + i * sz;
-    const void *b = (const char *)data + j * sz;
-    if(i == j && !(flags.checks & CHECK_REFLEXIVITY)) {
-      // Do not call cmp(x,x) unless explicitly asked by user
-      // because some projects assert on self-comparisons (e.g. GCC)
-      cmp_[i - start][j - start] = 0;
-      continue;
+  unsigned starts[3], ends[3];
+  for (i = 0; i < 3; ++i) {
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+    starts[i] = flags.start >= 0 ? (unsigned)flags.start : ((unsigned)random_generate() % n);
+    if (n < starts[i] + flags.extent) {
+      starts[i] = n < flags.extent ? 0 : n - flags.extent;
     }
-    cmp_[i - start][j - start] = sign(cmp_eval(cmp, a, b));
+    ends[i] = min(starts[i] + flags.extent, n);
   }
 
   // Following axioms from http://mathworld.wolfram.com/StrictOrder.html
@@ -441,9 +433,10 @@ static void check_total_order(ErrorContext *ctx, const Comparator *cmp, const ch
   // Totality by construction
 
   if(flags.checks & CHECK_REFLEXIVITY) {
-    for(i = 0; i < n; ++i) {
+    for(i = starts[0]; i < ends[0]; ++i) {
       // TODO: it may make sense to compare different but equal elements?
-      if(0 != cmp_[i][i]) {
+      const void *a = (const char *)data + i * sz;
+      if(0 != cmp_eval(cmp, a, a)) {
         report_error(ctx, "comparison function is not reflexive (returns non-zero for equal elements)");
         break;
       }
@@ -451,9 +444,13 @@ static void check_total_order(ErrorContext *ctx, const Comparator *cmp, const ch
   }
 
   if(flags.checks & CHECK_SYMMETRY) {
-    for(i = 0; i < n; ++i)
-    for(j = 0; j < i; ++j) {
-      if(cmp_[i][j] != -cmp_[j][i]) {
+    for(i = starts[0]; i < ends[0]; ++i)
+    for(j = starts[1]; j < ends[1]; ++j) {
+      if(i == j)
+        continue;
+      const void *a = (const char *)data + i * sz;
+      const void *b = (const char *)data + j * sz;
+      if(sign(cmp_eval(cmp, a, b)) != - sign(cmp_eval(cmp, b, a))) {
         report_error(ctx, "comparison function is not symmetric");
         goto sym_check_done;
       }
@@ -461,19 +458,24 @@ static void check_total_order(ErrorContext *ctx, const Comparator *cmp, const ch
   }
 sym_check_done:
 
-  if(flags.checks & CHECK_TRANSITIVITY) {
-    // FIXME: slow slow...
-    for(i = 0; i < n; ++i)
-    for(j = 0; j < i; ++j)
-    for(k = 0; k < n; ++k) {
-      // Don't compare element to itself unless requested by user
-      if((i == k || j == k) && !(flags.checks & CHECK_REFLEXIVITY))
-        continue;
-      if(cmp_[i][j] == cmp_[j][k] && cmp_[i][j] != cmp_[i][k]) {
-        report_error(ctx, "comparison function is not transitive");
-        goto trans_check_done;
-      }
-    }
+  if(flags.checks & CHECK_TRANSITIVITY) { // Slow slow...
+    for(i = starts[0]; i < ends[0]; ++i) {
+      const void *a = (const char *)data + i * sz;
+      for(j = starts[1]; j < ends[1]; ++j) {
+        const void *b = (const char *)data + j * sz;
+        const int order = sign(cmp_eval(cmp, a, b));
+        for(k = starts[2]; k < ends[2]; ++k) {
+          // Don't compare element to itself unless requested by user
+          if((i == k || j == k) && !(flags.checks & CHECK_REFLEXIVITY))
+            continue;
+          const void *c = (const char *)data + k * sz;
+          if(order == sign(cmp_eval(cmp, b, c)) && order != sign(cmp_eval(cmp, a, c))) {
+             report_error(ctx, "comparison function is not transitive");
+             goto trans_check_done;
+          }
+        }  // k
+      }  // j
+    }  // i
   }
 trans_check_done:
 

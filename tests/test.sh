@@ -69,9 +69,9 @@ for t in tests/*.c; do
   fi
 
   if has_option $t OPTS; then
-    export SORTCHECK_OPTIONS=$(get_option $t OPTS)
+    export SORTCHECK_OPTIONS=start=0:$(get_option $t OPTS)
   else
-    unset SORTCHECK_OPTIONS
+    export SORTCHECK_OPTIONS=start=0
   fi
   if has_option $t CMDLINE; then
     ARGS=$(get_option $t CMDLINE)
