@@ -16,7 +16,7 @@ char aa[33] = {
 };
 
 // OPTS: start=1
-// CHECK: qsort: .* called from
+// CHECK: comparison function is not symmetric
 int cmp(const void *pa, const void *pb) {
   return *(const char *)pa == 0 ? 0 : 1;
 }

@@ -10,7 +10,7 @@
 char aa[] = { 1, 2, 3 };
 
 // OPTS: report_error=0
-// CHECK-NOT: qsort: .* called from
+// CHECK-NOT: qsort
 int cmp(const void *pa, const void *pb) {
   static int x;
   return x++ % 2;
