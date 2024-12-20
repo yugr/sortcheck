@@ -486,6 +486,10 @@ trans_check_done:
 }
 
 // Pseudo-randomly shuffle vector to provoke errors in far elements
+#ifdef __clang__
+// We have intentional unsigned overflow
+__attribute__((no_sanitize("integer")))
+#endif
 static void shuffle(void *data, size_t n, size_t sz) {
   size_t i;
   for (i = 0; i < n; ++i) {
