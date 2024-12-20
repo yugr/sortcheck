@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Yury Gribov
+ * Copyright 2015-2024 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -8,6 +8,10 @@
 #include <stdlib.h>
 
 char aa[] = { 1, 2, 3 };
+
+// Under Asan qsort and callback are intercepted
+// so addresses are located in libasan (not a.out)
+// SKIPPED: asan
 
 // CMDLINE: a b c
 // CHECK: a.out.*: qsort: comparison function returns unstable results (comparison function .*a.out+.*, called from .*a.out+.*, cmdline is ".*/a.out a b c")

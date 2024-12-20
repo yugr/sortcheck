@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2022 Yury Gribov
+# Copyright 2015-2024 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -77,6 +77,26 @@ for t in tests/*.c; do
     ARGS=$(get_option $t CMDLINE)
   else
     ARGS=
+  fi
+  if has_option $t SKIPPED; then
+    SKIP=
+    for d in $(get_option $t SKIPPED | sed -e 's/, *//g'); do
+      case $d in
+        asan)
+          if test -n "$ASAN_PRELOAD"; then
+            SKIP=1
+            break
+          fi
+          ;;
+        *)
+          echo >&2 "$t: unknown disabling: $d"
+          exit 1
+          ;;
+      esac
+    done
+    if test -n "$SKIP"; then
+      continue
+    fi
   fi
 
   get_syslog > bin/syslog.bak

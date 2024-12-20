@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Yury Gribov
+ * Copyright 2015-2024 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -8,6 +8,9 @@
 #include <stdlib.h>
 
 char aa[] = { 1, 2, 3 };
+
+// Asan preruns comparator on array which ruins logic below
+// SKIPPED: asan
 
 // OPTS: check=no_all,basic
 // CHECK: comparison function modifies data
