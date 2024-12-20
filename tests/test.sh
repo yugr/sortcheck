@@ -147,6 +147,8 @@ for t in tests/*.c; do
 
   if test -z "$failed"; then
     echo "$t: OK"
+  else
+    head -10 bin/a.out.log
   fi
 done
 
