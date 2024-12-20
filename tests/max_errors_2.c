@@ -11,15 +11,12 @@
 
 char aa[] = { 1, 2, 3 };
 
-// Asan preruns comparator on array which ruins logic below
-// SKIPPED: asan
-
 int cmp(const void *pa, const void *pb) {
   char a = *(const char *)pa;
   char b = *(const char *)pb;
-  // CHECK-NOT: comparison function is not symmetric
   int res = a == b ? 1 : 0;
   // CHECK: comparison function modifies data
+  // CHECK-NOT: comparison function returns unstable result
   *(char *)pa = *(char *)pa + 1;
   return res;
 }
