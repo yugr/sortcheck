@@ -19,7 +19,6 @@ char aa[33] = {
 // CHECK: comparison function is not symmetric
 int cmp(const void *pa, const void *pb) {
   char a = *(const char *)pa;
-  char b = *(const char *)pb;
   return a == 100 ? 1 : 0;
 }
 
