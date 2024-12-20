@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 Yury Gribov
+ * Copyright 2015-2024 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -88,6 +88,9 @@ int parse_flags(char *opt, Flags *flags) {
     } else if(0 == strcmp(name, "start")) {
       int random = 0 == strcmp(name, "rand") || 0 == strcmp(name, "random");
       flags->start = (unsigned)(random ? rand() : atoi(value));
+    } else if(0 == strcmp(name, "shuffle")) {
+      int random = 0 == strcmp(name, "rand") || 0 == strcmp(name, "random");
+      flags->shuffle = (unsigned)(random ? rand() : atoi(value));
     } else {
       fprintf(stderr, "sortcheck: unknown option '%s'\n", name);
       return 0;

@@ -66,7 +66,8 @@ $ LD_PRELOAD=libsortcheck.so myapp ...
 ```
 
 (you'll probably want to combine this with some kind of regression
-or random/fuzz testing to achieve good coverage).
+or random/fuzz testing to achieve good coverage,
+also see the `shuffle` option below).
 
 You could also use a helper script `sortcheck` to do this for you:
 
@@ -130,8 +131,12 @@ available options are
   inappropriately.
   * for each option `XYZ` there's a dual `no_XYZ` (which disables
   corresponding check)
+* `shuffle` - reshuffle array before checking with given seed;
+  a value of `rand` will use random seed
+  (helps find bugs which are not located at start of array)
 * `start` - check the `start`-th group of 32 leading elements (default 0);
-  a value of `rand` will select random group.
+  a value of `rand` will select random group
+  (this option is DEPRECATED, see `shuffle` instead).
 
 # Applying to full distribution
 
@@ -140,7 +145,7 @@ You can run full Linux distro under SortChecker:
 * create a global config:
 
   ```
-  $ echo print_to_syslog=1:check=default:start=rand | sudo tee /SORTCHECK_OPTIONS 
+  $ echo print_to_syslog=1:check=default:shuffle=rand | sudo tee /SORTCHECK_OPTIONS 
   $ sudo chmod a+r /SORTCHECK_OPTIONS
   ```
 
@@ -197,5 +202,4 @@ Here's less high-level stuff (sorted by priority):
 * ensure that code is thread-safe (may need lots of platform-dependent code for atomics...)
 * print complete backtrace rather than just address of caller (libunwind?)
 * print array elements which triggered errors (i.e. hex dumps)
-* use random array subsets for testing
 * other minor TODO/FIXME are scattered all over the codebase

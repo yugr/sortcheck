@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 Yury Gribov
+ * Copyright 2015-2024 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -10,6 +10,8 @@
 #include <flags.h>
 #include <io.h>
 #include <platform.h>
+
+#include <limits.h>
 
 // Predeclare exported functions to please Clang.
 
@@ -52,6 +54,7 @@ static Flags flags = {
   /*sleep*/ 0,
   /*checks*/ CHECK_DEFAULT,
   /*start*/ 0,
+  /*shuffle*/ UINT_MAX,
   /*out_filename*/ 0
 };
 
@@ -70,6 +73,7 @@ static char *proc_name, *proc_cmdline;
 static unsigned num_errors = 0;
 static long proc_pid = -1;
 static const void **reported_errors;
+static unsigned shuffle_seed = 0;
 
 static void fini(void) {
   // FIXME: do we really need to release this stuff?
@@ -185,6 +189,8 @@ static void init(void) {
   proc_pid = (long)getpid();
 
   reported_errors = calloc(flags.max_errors, sizeof(void *));
+
+  shuffle_seed = flags.shuffle;
 
   atexit(fini);
 
@@ -415,7 +421,6 @@ static void check_total_order(ErrorContext *ctx, const Comparator *cmp, const ch
     return;
 
   // TODO: 2 bits enough for status
-  // TODO: randomize selection of sub-array (and print seed in error message for repro)
   int8_t cmp_[32][32];
   unsigned start = flags.start % n;
   unsigned end = n > start + 32u ? start + 32u : n;
@@ -478,6 +483,34 @@ sym_check_done:
 trans_check_done:
 
   return;
+}
+
+// Pseudo-randomly shuffle vector to provoke errors in far elements
+static void shuffle(void *data, size_t n, size_t sz) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    size_t k = shuffle_seed % sz;
+    shuffle_seed = shuffle_seed * 1664525u + 1013904223u;
+
+    long *lhs = (long *)((char *)data + i * sz);
+    long *rhs = (long *)((char *)data + k * sz);
+
+    size_t j;
+    for (j = 0; j < sz / sizeof(long); ++j) {
+      long tmp = lhs[j];
+      lhs[j] = rhs[j];
+      rhs[j] = tmp;
+    }
+
+    char *lhs_tail = (char *)&lhs[j];
+    char *rhs_tail = (char *)&rhs[j];
+
+    for (j = 0; j < sz % sizeof(long); ++j) {
+      char tmp = lhs_tail[j];
+      lhs_tail[j] = rhs[j];
+      rhs_tail[j] = tmp;
+    }
+  }
 }
 
 #define GET_REAL(sym)                                        \
@@ -553,6 +586,8 @@ static inline void qsort_common(void *data, size_t n, size_t sz, cmp_fun_t cmp,
   Comparator c = { cmp, 0, 0 };
   int suppress_errors_ = !n || suppress_errors(cmp);
   if(!suppress_errors_) {
+    if (shuffle_seed != UINT_MAX)
+      shuffle(data, n, sz);
     check_basic(ctx, &c, 0, data, n, sz);
     check_total_order(ctx, &c, 0, data, n, sz);
   }
@@ -591,6 +626,8 @@ EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg)
   Comparator c = { cmp, arg, 1 };
   int suppress_errors_ = !n || suppress_errors(cmp);
   if (!suppress_errors_) {
+    if (shuffle_seed != UINT_MAX)
+      shuffle(data, n, sz);
     check_basic(&ctx, &c, 0, data, n, sz);
     check_total_order(&ctx, &c, 0, data, n, sz);
   }
