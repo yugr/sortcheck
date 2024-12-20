@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Yury Gribov
+ * Copyright 2021-2024 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -7,12 +7,18 @@
 
 #include <stdlib.h>
 
-char aa[128];
+char aa[33] = {
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  100
+};
 
 // OPTS: start=1
 // CHECK: qsort: .* called from
 int cmp(const void *pa, const void *pb) {
-  return (const char *)pa < &aa[32] ? 0 : 1;
+  return *(const char *)pa == 0 ? 0 : 1;
 }
 
 int main() {
