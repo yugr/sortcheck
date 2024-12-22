@@ -1,4 +1,4 @@
-# Copyright 2015-2021 Yury Gribov
+# Copyright 2015-2024 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -8,8 +8,15 @@ DESTDIR ?= /usr/local
 
 CPPFLAGS = -D_GNU_SOURCE -Iinclude
 CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
-LDFLAGS = -fPIC -shared -Wl,--no-allow-shlib-undefined -Wl,--warn-common
-LIBS = -ldl
+LDFLAGS = -fPIC -shared -Wl,--warn-common
+LIBS =
+
+ifeq (,$(shell uname | grep BSD))
+  # BSDs have dlopen in libc
+  LIBS += -ldl
+  # TODO: why BSD has some undefined syms in libc?
+  LDFLAGS += -Wl,--no-allow-shlib-undefined
+endif
 
 ifneq (,$(COVERAGE))
   DEBUG = 1
@@ -84,7 +91,7 @@ help:
 
 clean:
 	rm -f bin/*
-	find -name \*.gcov -o -name \*.gcno -o -name \*.gcda | xargs rm -rf
+	find . -name \*.gcov -o -name \*.gcno -o -name \*.gcda | xargs rm -rf
 
 .PHONY: clean all install check FORCE help
 
