@@ -1,15 +1,15 @@
 /*
- * Copyright 2018 Yury Gribov
+ * Copyright 2018-2024 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
  */
 
-#include <bsd/stdlib.h>
+#include <stdlib.h>
 
 char aa[] = { 1, 2, 3 };
 
-// CFLAGS: -lbsd
+// REQUIRE: bsd
 // CHECK: comparison function is not symmetric
 int cmp(const void *pa, const void *pb) {
   char a = *(const char *)pa;
