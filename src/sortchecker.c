@@ -42,6 +42,7 @@ EXPORT int dlclose(void *handle);
 #include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <libgen.h>
 
 // Runtime options
 static FILE *out;
