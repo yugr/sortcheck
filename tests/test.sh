@@ -65,32 +65,16 @@ fi
 has_feature() {
   case $d in
     asan)
-      if test -n "$ASAN_PRELOAD"; then
-        return 0
-      else
-        return 1
-      fi
+      test -n "$ASAN_PRELOAD"
       ;;
     bsd)
-      if uname | grep -q BSD; then
-        return 0
-      else
-        return 1
-      fi
+      uname | grep -q BSD
       ;;
     netbsd)
-      if uname | grep -q NetBSD; then
-        return 0
-      else
-        return 1
-      fi
+      uname | grep -q NetBSD
       ;;
     syslog)
-      if test -r /var/log/syslog || which journalctl > /dev/null; then
-        return 0
-      else
-        return 1
-      fi
+      test -r /var/log/syslog || which journalctl > /dev/null
       ;;
     *)
       echo >&2 "$t: unknown feature: $d"
