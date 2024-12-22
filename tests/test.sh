@@ -81,12 +81,24 @@ for t in tests/*.c; do
   else
     ARGS=
   fi
-  if has_option $t SKIPPED; then
+  if has_option $t SKIP; then
     SKIP=
-    for d in $(get_option $t SKIPPED | sed -e 's/, *//g'); do
+    for d in $(get_option $t SKIP | sed -e 's/, *//g'); do
       case $d in
         asan)
           if test -n "$ASAN_PRELOAD"; then
+            SKIP=1
+            break
+          fi
+          ;;
+        bsd)
+          if uname | grep -q BSD; then
+            SKIP=1
+            break
+          fi
+          ;;
+        netbsd)
+          if uname | grep -q NetBSD; then
             SKIP=1
             break
           fi

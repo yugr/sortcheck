@@ -11,7 +11,7 @@ char k = 1;
 char aa[] = { 1, 2, 3 };
 
 // TODO: why this fails under Asan?
-// SKIPPED: asan
+// SKIP: asan
 
 // OPTS: check=default,good_bsearch
 // CHECK: comparison function is not symmetric

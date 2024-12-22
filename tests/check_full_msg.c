@@ -11,7 +11,7 @@ char aa[] = { 1, 2, 3 };
 
 // Under Asan qsort and callback are intercepted
 // so addresses are located in libasan (not a.out)
-// SKIPPED: asan
+// SKIP: asan
 
 // CMDLINE: a b c
 // CHECK: a.out.*: qsort: comparison function returns unstable results (comparison function .*a.out+.*, called from .*a.out+.*, cmdline is ".*/a.out a b c")

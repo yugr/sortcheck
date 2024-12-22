@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Yury Gribov
+ * Copyright 2018-2024 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -9,6 +9,9 @@
 #include <stdlib.h>
 
 char aa[] = { 1, 2, 3 };
+
+// NetBSD misses qsort_r: https://gnats.netbsd.org/58931
+// SKIP: netbsd
 
 // CHECK: comparison function is not symmetric
 int cmp(const void *pa, const void *pb, void *a) {
