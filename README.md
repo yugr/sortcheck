@@ -201,5 +201,5 @@ It may also make sense to check other popular sorting APIs:
 Here's less high-level stuff (sorted by priority):
 * ensure that code is thread-safe (may need lots of platform-dependent code for atomics...)
 * print complete backtrace rather than just address of caller (libunwind?)
-* print array elements which triggered errors (i.e. hex dumps)
+* autotest on BSDs (via [vmactions](https://github.com/vmactions/netbsd-vm))
 * other minor TODO/FIXME are scattered all over the codebase
