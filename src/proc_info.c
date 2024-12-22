@@ -15,6 +15,8 @@
 #include <assert.h>
 #include <errno.h>
 
+#include <libgen.h>
+
 static char *read_field(char **p) {
   // Skip leading whites
   char *res = *p;

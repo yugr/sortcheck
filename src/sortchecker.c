@@ -41,7 +41,6 @@ EXPORT int dlclose(void *handle);
 #include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <libgen.h>
 
 // We can't include stdlib.h because on some platforms
 // it defines macro for APIs below
