@@ -44,7 +44,7 @@ ASAN_OPTIONS=verify_asan_link_order=0:$ASAN_OPTIONS
 
 CC=${CC:-gcc}
 
-if readelf --dyn-syms -W bin/libsortcheck.so | grep -q __asan_init; then
+if readelf -sDW bin/libsortcheck.so | grep -q __asan_init; then
   if $CC --version | grep -q clang; then
     ASAN_RT_LIB=libclang_rt.asan-x86_64.so
   else  # clang
