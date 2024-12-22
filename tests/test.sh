@@ -63,7 +63,7 @@ if test -n "${VALGRIND:-}"; then
 fi
 
 has_feature() {
-  case $d in
+  case "$1" in
     asan)
       test -n "$ASAN_PRELOAD"
       ;;
