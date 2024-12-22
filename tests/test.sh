@@ -31,8 +31,10 @@ get_option() {
 get_syslog() {
   if test -r /var/log/syslog; then
     cat /var/log/syslog
-  else
+  elif which journalctl > /dev/null; then
     journalctl -q
+  else
+    :
   fi | grep a.out.*qsort || true
 }
 
