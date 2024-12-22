@@ -38,11 +38,19 @@ EXPORT int dlclose(void *handle);
 #include <errno.h>
 
 #include <dlfcn.h>
-#include <stdlib.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <libgen.h>
+
+// We can't include stdlib.h because on some platforms
+// it defines macro for APIs below
+extern void *malloc(size_t size);
+extern void *calloc(size_t nmemb, size_t size);
+extern void free(void *ptr);
+extern char *getenv(const char *name);
+extern void exit(int code);
+extern int atexit(void (*function)(void));
 
 // Runtime options
 static FILE *out;
