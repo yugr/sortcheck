@@ -23,8 +23,8 @@ EXPORT void lfind(const void *key, const void *data, size_t *n, size_t sz, cmp_f
 EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t cmp);
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
-EXPORT void heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
-EXPORT void mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
+EXPORT int heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
+EXPORT int mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
 EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg);
 EXPORT void *dlopen(const char *filename, int flag);
 EXPORT int dlclose(void *handle);
@@ -593,9 +593,10 @@ EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t
     check_uniqueness(&ctx, &c, data, *n, sz);
 }
 
-static inline void qsort_common(void *data, size_t n, size_t sz, cmp_fun_t cmp,
-                         void (*real)(void *, size_t n, size_t sz, cmp_fun_t cmp),
-                         ErrorContext *ctx) {
+typedef int (*sort_fun_t)(void *p, size_t  n, size_t sz, cmp_fun_t cmp);
+
+static inline int sort_common(void *data, size_t n, size_t sz, cmp_fun_t cmp,
+                              sort_fun_t sort, ErrorContext *ctx) {
   Comparator c = { cmp, 0, 0 };
   int suppress_errors_ = !n || suppress_errors(cmp);
   if(!suppress_errors_) {
@@ -604,32 +605,39 @@ static inline void qsort_common(void *data, size_t n, size_t sz, cmp_fun_t cmp,
     check_basic(ctx, &c, 0, data, n, sz);
     check_total_order(ctx, &c, 0, data, n, sz);
   }
-  real(data, n, sz, cmp);
+  int res = sort(data, n, sz, cmp);
   if(!suppress_errors_)
     check_uniqueness(ctx, &c, data, n, sz);
+  return res;
+}
+
+// Wrapper for compatibility with sort_common
+static int qsort_helper(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
+  GET_REAL(qsort);
+  _real(data, n, sz, cmp);
+  return 0;
 }
 
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
-  GET_REAL(qsort);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
-  qsort_common(data, n, sz, cmp, _real, &ctx);
+  sort_common(data, n, sz, cmp, qsort_helper, &ctx);
 }
 
 // BSD extension
-EXPORT void heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
+EXPORT int heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(heapsort);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
-  qsort_common(data, n, sz, cmp, _real, &ctx);
+  return sort_common(data, n, sz, cmp, _real, &ctx);
 }
 
 // BSD extension
-EXPORT void mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
+EXPORT int mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(mergesort);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
-  qsort_common(data, n, sz, cmp, _real, &ctx);
+  return sort_common(data, n, sz, cmp, _real, &ctx);
 }
 
 EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg) {
