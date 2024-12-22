@@ -65,6 +65,7 @@ fi
 for t in tests/*.c; do
   failed=
 
+  rm -f bin/a.out
   if ! $CC $t -Itest $(get_option $t CFLAGS) -o bin/a.out; then
     error "$t: compilation failed"
     failed=1
