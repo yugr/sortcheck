@@ -10,6 +10,7 @@
 char aa[] = { 1, 2, 3 };
 
 // OPTS: check=no_all,basic:print_to_syslog=1
+// REQUIRE: syslog
 // SYSLOG: comparison function modifies data
 int cmp(const void *pa, const void *pb) {
   char a = *(const char *)pa;

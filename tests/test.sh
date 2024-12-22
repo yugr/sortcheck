@@ -35,7 +35,7 @@ get_syslog() {
     journalctl -q
   else
     :
-  fi | grep a.out.*qsort || true
+  fi | grep -a a.out.*qsort || true
 }
 
 # From https://github.com/google/sanitizers/wiki/AddressSanitizer
@@ -62,8 +62,73 @@ if test -n "${VALGRIND:-}"; then
   VALGRIND='valgrind -q --error-exitcode=1'
 fi
 
+has_feature() {
+  case $d in
+    asan)
+      if test -n "$ASAN_PRELOAD"; then
+        return 0
+      else
+        return 1
+      fi
+      ;;
+    bsd)
+      if uname | grep -q BSD; then
+        return 0
+      else
+        return 1
+      fi
+      ;;
+    netbsd)
+      if uname | grep -q NetBSD; then
+        return 0
+      else
+        return 1
+      fi
+      ;;
+    syslog)
+      if test -r /var/log/syslog || which journalctl > /dev/null; then
+        return 0
+      else
+        return 1
+      fi
+      ;;
+    *)
+      echo >&2 "$t: unknown feature: $d"
+      exit 1
+      ;;
+  esac
+}
+
 for t in tests/*.c; do
   failed=
+
+  if has_option $t REQUIRE; then
+    SKIP=
+    for d in $(get_option $t REQUIRE | sed -e 's/, *//g'); do
+      if ! has_feature $d; then
+        SKIP=1
+        break
+      fi
+    done
+    if test -n "$SKIP"; then
+      error "$t: skipped"
+      continue
+    fi
+  fi
+
+  if has_option $t SKIP; then
+    SKIP=
+    for d in $(get_option $t SKIP | sed -e 's/, *//g'); do
+      if has_feature $d; then
+        SKIP=1
+        break
+      fi
+    done
+    if test -n "$SKIP"; then
+      error "$t: skipped"
+      continue
+    fi
+  fi
 
   rm -f bin/a.out
   if ! $CC $t -Itest $(get_option $t CFLAGS) -o bin/a.out; then
@@ -76,42 +141,11 @@ for t in tests/*.c; do
   else
     unset SORTCHECK_OPTIONS
   fi
+
   if has_option $t CMDLINE; then
     ARGS=$(get_option $t CMDLINE)
   else
     ARGS=
-  fi
-  if has_option $t SKIP; then
-    SKIP=
-    for d in $(get_option $t SKIP | sed -e 's/, *//g'); do
-      case $d in
-        asan)
-          if test -n "$ASAN_PRELOAD"; then
-            SKIP=1
-            break
-          fi
-          ;;
-        bsd)
-          if uname | grep -q BSD; then
-            SKIP=1
-            break
-          fi
-          ;;
-        netbsd)
-          if uname | grep -q NetBSD; then
-            SKIP=1
-            break
-          fi
-          ;;
-        *)
-          echo >&2 "$t: unknown disabling: $d"
-          exit 1
-          ;;
-      esac
-    done
-    if test -n "$SKIP"; then
-      continue
-    fi
   fi
 
   get_syslog > bin/syslog.bak
