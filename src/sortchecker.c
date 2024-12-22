@@ -273,7 +273,7 @@ static void report_error(ErrorContext *ctx, const char *fmt, ...) {
   size_t full_msg_size = sizeof(buf);
   for(i = 0; i < 2; ++i) {
     // TODO: some parts of the message may be precomputed
-    size_t need = snprintf(full_msg, full_msg_size, "%s[%ld]: %s: %s (comparison function %p (%s+0x%zx), called from %p (%s+0x%zx), cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->cmp_addr, ctx->cmp_module, ctx->cmp_offset, ctx->ret_addr, ctx->caller_module, ctx->caller_offset, proc_cmdline);
+    size_t need = snprintf(full_msg, full_msg_size, "%s[%ld]: %s: %s (comparison function %p (%s+0x%zx), called from %p (%s+0x%zx), cmdline is \"%s\")\n", proc_name, proc_pid, ctx->func, body, ctx->cmp_addr, ctx->cmp_module, ctx->cmp_offset, ctx->ret_addr, ctx->caller_module, ctx->caller_offset, proc_cmdline ? proc_cmdline : "");
     if(i == 0 && need < sizeof(body))  // Did it fit to local buf?
       break;
     if(i == 0 && need >= sizeof(body)) {  // It didn't - go ahead and malloc

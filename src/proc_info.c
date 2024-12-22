@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Yury Gribov
+ * Copyright 2015-2024 Yury Gribov
  * 
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE.txt file.
@@ -98,6 +98,11 @@ void get_proc_cmdline(char **pname, char **pcmdline) {
 
   size_t size;
   char *cmdline = read_file("/proc/self/cmdline", &size);
+
+  if (!cmdline) {
+    *pcmdline = 0;
+    return;
+  }
 
   *pname = strdup(basename(cmdline));
 
