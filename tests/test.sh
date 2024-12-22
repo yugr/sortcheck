@@ -111,7 +111,7 @@ for t in tests/*.c; do
       fi
     done
     if test -n "$SKIP"; then
-      error "$t: skipped"
+      echo "$t: skipped"
       continue
     fi
   fi
@@ -125,7 +125,7 @@ for t in tests/*.c; do
       fi
     done
     if test -n "$SKIP"; then
-      error "$t: skipped"
+      echo "$t: skipped"
       continue
     fi
   fi
