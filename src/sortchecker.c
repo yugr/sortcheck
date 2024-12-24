@@ -595,11 +595,12 @@ EXPORT void lsearch(const void *key, void *data, size_t *n, size_t sz, cmp_fun_t
 typedef int (*sort_fun_t)(void *p, size_t  n, size_t sz, cmp_fun_t cmp);
 
 static inline int sort_common(void *data, size_t n, size_t sz, cmp_fun_t cmp,
-                              sort_fun_t sort, ErrorContext *ctx) {
+                              sort_fun_t sort, ErrorContext *ctx,
+                              int do_shuffle) {
   Comparator c = { cmp, 0, 0 };
   int suppress_errors_ = !n || suppress_errors(cmp);
   if(!suppress_errors_) {
-    if (shuffle_seed != UINT_MAX)
+    if (do_shuffle && shuffle_seed != UINT_MAX)
       shuffle(data, n, sz);
     check_basic(ctx, &c, 0, data, n, sz);
     check_total_order(ctx, &c, 0, data, n, sz);
@@ -620,7 +621,7 @@ static int qsort_helper(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
-  sort_common(data, n, sz, cmp, qsort_helper, &ctx);
+  sort_common(data, n, sz, cmp, qsort_helper, &ctx, /*do_shuffle*/ 1);
 }
 
 // BSD extension
@@ -628,7 +629,7 @@ EXPORT int heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(heapsort);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
-  return sort_common(data, n, sz, cmp, _real, &ctx);
+  return sort_common(data, n, sz, cmp, _real, &ctx, /*do_shuffle*/ 1);
 }
 
 // BSD extension
@@ -636,7 +637,8 @@ EXPORT int mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   MAYBE_INIT;
   GET_REAL(mergesort);
   ErrorContext ctx = { __func__, cmp, 0, 0, __builtin_return_address(0), 0, 0, 0 };
-  return sort_common(data, n, sz, cmp, _real, &ctx);
+  // Mergesort is stable so we can't shuffle
+  return sort_common(data, n, sz, cmp, _real, &ctx, /*do_shuffle*/ 0);
 }
 
 EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg) {
