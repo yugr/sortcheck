@@ -71,7 +71,7 @@ $ LD_PRELOAD=libsortcheck.so myapp ...
 
 (you'll probably want to combine this with some kind of regression
 or random/fuzz testing to achieve good coverage,
-also see the `shuffle` option below).
+also see the `shuffle` and `start` options below).
 
 You could also use a helper script `sortcheck` to do this for you:
 
@@ -140,7 +140,6 @@ available options are
   (helps find bugs which are not located at start of array)
 * `start` - check the `start`-th group of 32 leading elements (default 0);
   a value of `rand` will select random group
-  (this option is DEPRECATED, see `shuffle` instead).
 
 # Applying to full distribution
 
