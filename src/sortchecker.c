@@ -27,6 +27,7 @@ EXPORT int heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
 EXPORT int mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
 #ifndef __APPLE__
 // TODO: order of qsort_r arguments is different on Darwin
+// and in __qsort_r_compat on FreeBSD
 EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg);
 #endif
 EXPORT void *dlopen(const char *filename, int flag);
