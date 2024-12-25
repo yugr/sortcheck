@@ -11,7 +11,7 @@
 char aa[] = { 1, 2, 3 };
 
 // NetBSD misses qsort_r: https://gnats.netbsd.org/58931
-// SKIP: netbsd, mac
+// SKIP: netbsd, openbsd, mac
 
 // CHECK: comparison function is not symmetric
 int cmp(const void *pa, const void *pb, void *a) {

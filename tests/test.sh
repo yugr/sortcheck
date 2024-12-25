@@ -31,7 +31,7 @@ get_option() {
 get_syslog() {
   if test -r /var/log/syslog; then
     cat /var/log/syslog
-  elif which journalctl > /dev/null; then
+  elif which journalctl >/dev/null 2>&1; then
     journalctl -q
   else
     :
@@ -44,7 +44,7 @@ export ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=1
 # Get rid of "ASan runtime does not come first in initial library list"
 ASAN_OPTIONS=verify_asan_link_order=0:$ASAN_OPTIONS
 
-CC=${CC:-gcc}
+CC=${CC:-cc}
 
 CFLAGS=
 if uname | grep -q Darwin; then
@@ -82,11 +82,14 @@ has_feature() {
     netbsd)
       uname | grep -q NetBSD
       ;;
+    openbsd)
+      uname | grep -q OpenBSD
+      ;;
     proc)
       test -d /proc && test -r /proc
       ;;
     syslog)
-      test -r /var/log/syslog || which journalctl > /dev/null
+      test -r /var/log/syslog || which journalctl >/dev/null 2>&1
       ;;
     *)
       echo >&2 "$t: unknown feature: $d"
@@ -156,7 +159,9 @@ for t in tests/*.c; do
   rc=$?
   set -e
 
-  cat bin/a.out.log
+  if test -n "${TRAVIS:-}" -o -n "${GITHUB_ACTIONS:-}"; then
+    cat bin/a.out.log
+  fi
 
   if test $rc != 0; then
     error "$t: test exited with a non-zero exit code"
