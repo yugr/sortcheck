@@ -141,8 +141,9 @@ available options are
 * `start` - check the `start`-th group of 32 leading elements (default 0);
   a value of `rand` will select random group
 
-Note that on Darwin you need to use `DYLD_INSERT_LIBRARIES` and `DYLD_FORCE_FLAT_NAMESPACE`.
-You may also need to disable System Integrity Protection.
+Note that on Darwin you need to use `DYLD_INSERT_LIBRARIES` and `DYLD_FORCE_FLAT_NAMESPACE`
+and may also need to disable System Integrity Protection.
+To verify that Sortcheck works on Darwin, run with `SORTCHECK_OPTIONS=debug=1`.
 
 # Applying to full distribution
 

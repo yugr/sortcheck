@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-# Copyright 2015-2016 Yury Gribov
+# Copyright 2015-2024 Yury Gribov
 # 
 # Use of this source code is governed by MIT license that can be
 # found in the LICENSE.txt file.
@@ -28,4 +28,9 @@ if ! test -f $LIB; then
   LIB=$(dirname $0)/../bin/libsortcheck.so
 fi
 
-bash -c "export LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}$LIB; $CMD"
+(
+  export LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}$LIB
+  export DYLD_INSERT_LIBRARIES=${DYLD_INSERT_LIBRARIES:+$DYLD_INSERT_LIBRARIES:}$LIB
+  export DYLD_FORCE_FLAT_NAMESPACE=1
+  $CMD
+)
