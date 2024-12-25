@@ -62,6 +62,12 @@ jobs:
       run: sudo apt-get install valgrind
     - name: Run tests
       run: scripts/travis.sh
+  Mac:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: scripts/travis.sh
   Coverage:
     needs: Tests
     runs-on: ubuntu-latest
