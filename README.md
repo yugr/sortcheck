@@ -177,7 +177,7 @@ tested SortChecker on Ubuntu and Fedora.
 # Known issues
 
 * SortChecker is not fully thread-safe yet (should be easy to fix though)
-* SortChecker is currently Linux-only (relies on `LD_PRELOAD`)
+* SortChecker is currently Linux/BSD-only (relies on `LD_PRELOAD`)
 
 # Future plans
 
@@ -204,5 +204,4 @@ It may also make sense to check other popular sorting APIs:
 Here's less high-level stuff (sorted by priority):
 * ensure that code is thread-safe (may need lots of platform-dependent code for atomics...)
 * print complete backtrace rather than just address of caller (libunwind?)
-* autotest on BSDs (via [vmactions](https://github.com/vmactions/netbsd-vm))
 * other minor TODO/FIXME are scattered all over the codebase
