@@ -141,6 +141,9 @@ available options are
 * `start` - check the `start`-th group of 32 leading elements (default 0);
   a value of `rand` will select random group
 
+Note that on Darwin you need to use `DYLD_INSERT_LIBRARIES` and `DYLD_FORCE_FLAT_NAMESPACE`.
+You may also need to disable System Integrity Protection.
+
 # Applying to full distribution
 
 You can run full Linux distro under SortChecker:
@@ -177,7 +180,7 @@ tested SortChecker on Ubuntu and Fedora.
 # Known issues
 
 * SortChecker is not fully thread-safe yet (should be easy to fix though)
-* SortChecker is currently Linux/BSD-only (relies on `LD_PRELOAD`)
+* SortChecker supports Linux, BSD and Darwin (relies on `LD_PRELOAD`)
 
 # Future plans
 

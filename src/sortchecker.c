@@ -25,7 +25,10 @@ EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
 EXPORT void qsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
 EXPORT int heapsort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
 EXPORT int mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp);
+#ifndef __APPLE__
+// TODO: order of qsort_r arguments is different on Darwin
 EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg);
+#endif
 EXPORT void *dlopen(const char *filename, int flag);
 EXPORT int dlclose(void *handle);
 
@@ -641,6 +644,7 @@ EXPORT int mergesort(void *data, size_t n, size_t sz, cmp_fun_t cmp) {
   return sort_common(data, n, sz, cmp, _real, &ctx, /*do_shuffle*/ 0);
 }
 
+#ifndef __APPLE__
 EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg) {
   MAYBE_INIT;
   GET_REAL(qsort_r);
@@ -657,6 +661,7 @@ EXPORT void qsort_r(void *data, size_t n, size_t sz, cmp_r_fun_t cmp, void *arg)
   if (!suppress_errors_)
     check_uniqueness(&ctx, &c, data, n, sz);
 }
+#endif
 
 EXPORT void *dlopen(const char *filename, int flag) {
   GET_REAL(dlopen);

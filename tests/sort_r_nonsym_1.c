@@ -11,7 +11,7 @@
 char aa[] = { 1, 2, 3 };
 
 // NetBSD misses qsort_r: https://gnats.netbsd.org/58931
-// SKIP: netbsd
+// SKIP: netbsd, mac
 
 // CHECK: comparison function is not symmetric
 int cmp(const void *pa, const void *pb, void *a) {
@@ -21,7 +21,11 @@ int cmp(const void *pa, const void *pb, void *a) {
 
 int main() {
   int x = 0;
+#ifdef __APPLE__
+  qsort_r(aa, sizeof(aa), 1, &x, cmp);
+#else
   qsort_r(aa, sizeof(aa), 1, cmp, &x);
+#endif
   return 0;
 }
 

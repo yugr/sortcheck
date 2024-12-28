@@ -46,6 +46,12 @@ ASAN_OPTIONS=verify_asan_link_order=0:$ASAN_OPTIONS
 
 CC=${CC:-gcc}
 
+CFLAGS=
+if uname | grep -q Darwin; then
+  # DYLD_FORCE_FLAT_NAMESPACE is not enough (due to System Integrity Protection?)
+  CFLAGS="$CFLAGS -flat_namespace"
+fi
+
 if readelf -sDW bin/libsortcheck.so | grep -q __asan_init; then
   if $CC --version | grep -q clang; then
     ASAN_RT_LIB=libclang_rt.asan-x86_64.so
@@ -68,10 +74,16 @@ has_feature() {
       test -n "$ASAN_PRELOAD"
       ;;
     bsd)
-      uname | grep -q BSD
+      uname | grep -q 'BSD\|Darwin'
+      ;;
+    mac)
+      uname | grep -q Darwin
       ;;
     netbsd)
       uname | grep -q NetBSD
+      ;;
+    proc)
+      test -d /proc && test -r /proc
       ;;
     syslog)
       test -r /var/log/syslog || which journalctl > /dev/null
@@ -88,7 +100,7 @@ for t in tests/*.c; do
 
   if has_option $t REQUIRE; then
     SKIP=
-    for d in $(get_option $t REQUIRE | sed -e 's/, *//g'); do
+    for d in $(get_option $t REQUIRE | sed -e 's/, */ /g'); do
       if ! has_feature $d; then
         SKIP=1
         break
@@ -102,7 +114,7 @@ for t in tests/*.c; do
 
   if has_option $t SKIP; then
     SKIP=
-    for d in $(get_option $t SKIP | sed -e 's/, *//g'); do
+    for d in $(get_option $t SKIP | sed -e 's/, */ /g'); do
       if has_feature $d; then
         SKIP=1
         break
@@ -115,7 +127,7 @@ for t in tests/*.c; do
   fi
 
   rm -f bin/a.out
-  if ! $CC $t -Itest $(get_option $t CFLAGS) -o bin/a.out; then
+  if ! $CC $t -Itest $CFLAGS $(get_option $t CFLAGS) -o bin/a.out; then
     error "$t: compilation failed"
     failed=1
   fi
@@ -134,7 +146,19 @@ for t in tests/*.c; do
 
   get_syslog > bin/syslog.bak
 
-  if ! LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}${ASAN_PRELOAD:+$ASAN_PRELOAD:}bin/libsortcheck.so $VALGRIND bin/a.out $ARGS 2>bin/a.out.log; then
+  set +e
+  (
+    export LD_PRELOAD=${LD_PRELOAD:+$LD_PRELOAD:}${ASAN_PRELOAD:+$ASAN_PRELOAD:}bin/libsortcheck.so
+    export DYLD_INSERT_LIBRARIES=${DYLD_INSERT_LIBRARIES:+$DYLD_INSERT_LIBRARIES:}${ASAN_PRELOAD:+$ASAN_PRELOAD:}bin/libsortcheck.so
+    export DYLD_FORCE_FLAT_NAMESPACE=1
+    $VALGRIND bin/a.out $ARGS 2>bin/a.out.log
+  )
+  rc=$?
+  set -e
+
+  cat bin/a.out.log
+
+  if test $rc != 0; then
     error "$t: test exited with a non-zero exit code"
     failed=1
   elif ! has_option $t CHECK && ! has_option $t CHECK-NOT && test -s bin/a.out.log; then

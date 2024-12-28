@@ -8,12 +8,19 @@ DESTDIR ?= /usr/local
 
 CPPFLAGS = -D_GNU_SOURCE -Iinclude
 CFLAGS = -fPIC -g -fvisibility=hidden -Wall -Wextra -Werror
-LDFLAGS = -fPIC -shared -Wl,--warn-common
+LDFLAGS = -fPIC -shared
 LIBS =
 
 ifeq (,$(shell uname | grep BSD))
   # BSDs have dlopen in libc
   LIBS += -ldl
+endif
+
+ifeq (,$(shell uname | grep Darwin))
+  LDFLAGS += -Wl,--warn-common
+endif
+
+ifeq (,$(shell uname | grep 'BSD\|Darwin'))
   # TODO: why BSD has some undefined syms in libc?
   LDFLAGS += -Wl,--no-allow-shlib-undefined
 endif
@@ -25,7 +32,6 @@ ifneq (,$(COVERAGE))
 endif
 ifeq (,$(DEBUG))
   CFLAGS += -O2
-  LDFLAGS += -Wl,-O2
 else
   CFLAGS += -O0
 endif

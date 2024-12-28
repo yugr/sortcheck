@@ -9,6 +9,8 @@
 
 char aa[] = { 1, 2, 3 };
 
+// REQUIRE: proc
+
 // Under Asan qsort and callback are intercepted
 // so addresses are located in libasan (not a.out)
 // SKIP: asan
