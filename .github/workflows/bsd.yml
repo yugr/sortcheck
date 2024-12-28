@@ -1,0 +1,23 @@
+name: BSD
+on:
+  schedule:
+    # Run on Mondays
+    - cron: '0 5 * * MON'
+jobs:
+  FreeBSD:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: vmactions/freebsd-vm@v1
+      with:
+        usesh: true
+        run: scripts/travis.sh
+  NetBSD:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: vmactions/netbsd-vm@v1
+      with:
+        usesh: true
+        run: scripts/travis.sh
+
