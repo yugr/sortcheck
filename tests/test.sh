@@ -24,8 +24,12 @@ has_option() {
   grep -q "// *$2 *:" $1
 }
 
-get_option() {
+get_multi_option() {
   cat $1 | sed -n 's!.*\/\/ *'$2' *: *!!p' | paste -sd, -
+}
+
+get_option() {
+  cat $1 | sed -n 's!.*\/\/ *'$2' *: *!!p'
 }
 
 get_syslog() {
@@ -103,7 +107,7 @@ for t in tests/*.c; do
 
   if has_option $t REQUIRE; then
     SKIP=
-    for d in $(get_option $t REQUIRE | sed -e 's/, */ /g'); do
+    for d in $(get_multi_option $t REQUIRE | sed -e 's/, */ /g'); do
       if ! has_feature $d; then
         SKIP=1
         break
@@ -117,7 +121,7 @@ for t in tests/*.c; do
 
   if has_option $t SKIP; then
     SKIP=
-    for d in $(get_option $t SKIP | sed -e 's/, */ /g'); do
+    for d in $(get_multi_option $t SKIP | sed -e 's/, */ /g'); do
       if has_feature $d; then
         SKIP=1
         break
