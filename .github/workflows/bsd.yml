@@ -13,7 +13,7 @@ jobs:
       with:
         usesh: true
         run: |
-          pkg install gmake
+          pkg install -y gmake
           scripts/travis.sh
   NetBSD:
     runs-on: ubuntu-latest
@@ -23,6 +23,6 @@ jobs:
       with:
         usesh: true
         run: |
-          pkg install gmake
+          pkg install -y gmake
           scripts/travis.sh
 
