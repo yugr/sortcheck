@@ -11,6 +11,9 @@ char aa[] = { 1, 2, 3 };
 
 // REQUIRE: proc
 
+// TODO: support BSD /proc/$$/maps format
+// SKIP: bsd
+
 // Under Asan qsort and callback are intercepted
 // so addresses are located in libasan (not a.out)
 // SKIP: asan
