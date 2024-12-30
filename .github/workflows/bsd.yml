@@ -1,5 +1,6 @@
 name: BSD
 on:
+  workflow_dispatch:
   schedule:
     # Run on Mondays
     - cron: '0 5 * * MON'
