@@ -25,7 +25,7 @@ has_option() {
 }
 
 get_option() {
-  cat $1 | sed -n 's!.*\/\/ *'$2' *: *!!p' | paste -sd,
+  cat $1 | sed -n 's!.*\/\/ *'$2' *: *!!p' | paste -sd, -
 }
 
 get_syslog() {
