@@ -12,9 +12,9 @@ jobs:
     - uses: vmactions/freebsd-vm@v1
       with:
         usesh: true
-        run: |
-          pkg install -y gmake
-          scripts/travis.sh
+        copyback: false
+        prepare: pkg install -y gmake
+        run: scripts/travis.sh
   NetBSD:
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +22,7 @@ jobs:
     - uses: vmactions/netbsd-vm@v1
       with:
         usesh: true
-        run: |
-          pkg install -y gmake
-          scripts/travis.sh
+        copyback: false
+        prepare: /usr/sbin/pkg_add gmake
+        run: scripts/travis.sh
 
