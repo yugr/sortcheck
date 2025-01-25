@@ -122,9 +122,8 @@ available options are
   * `symmetry` - check that cmp(x,y) == -cmp(y,x) (enabled by default)
   * `transitivity` - check that if x < y && y < z, then x < z
   (enabled by default)
-  * `reflexivity` - check that cmp(x,x) == 0 (usually not very important
-  so disabled by default, on the other hand may trigger on otherwise
-  undetected asymmetry bugs)
+  * `reflexivity` - check that cmp(x,x) == 0 (disabled by default,
+  on the other hand may trigger on otherwise undetected asymmetry bugs)
   * `unique` - check that cmp does not compare different objects
   as equal (to avoid [random orderings on different platforms](https://gcc.gnu.org/ml/gcc/2017-07/msg00078.html))
   * `good_bsearch` - bsearch uses a restricted (non-symmetric) form
